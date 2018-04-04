@@ -5,6 +5,7 @@ and
 http://www.binarii.com/files/papers/c_sockets.txt
  */
 
+#include <sys/select.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -17,7 +18,7 @@ http://www.binarii.com/files/papers/c_sockets.txt
 #include <pthread.h>
 
 char resp[100];
-int quit;
+char quit;
 
 
 pthread_mutex_t lock;
@@ -32,7 +33,7 @@ struct Packet
 void* handle_connection(void* p);
 char* parse_request(char* request);
 char* read_html_file(char* filename);
-void* exit_server(void* p);
+void* close_server(void* p);
 
 
 // extern char* get_temp(char* file_name);
@@ -88,16 +89,30 @@ int start_server(int PORT_NUMBER)
       // 4. accept: wait here until we get a connection on that port
       int sin_size = sizeof(struct sockaddr_in);
 
-      while (1) {
+      // keep on accepting requests as long has haven't received command to close server
+      while (quit != 'q') {
         int fd = accept(sock, (struct sockaddr *)&client_addr,(socklen_t *)&sin_size);
         if (fd != -1) {
 
+            // create packet ptr with necessary data for request thread
             packet* p = malloc(sizeof(packet));
+            if (p == NULL) {
+                return -1;
+            }
             p->client_addr = client_addr;
             p->fd = fd;
-            pthread_t t1;
+            pthread_t t1, t2;
+            // create request thread
             pthread_create(&t1, NULL, &handle_connection, p);
+
+            // create exit thread
+            pthread_create(&t2, NULL, &close_server, NULL);            
+
+            // join
             pthread_join(t1, NULL);
+            pthread_join(t2, NULL);
+
+            // free p
             free(p);
         }
       }
@@ -109,19 +124,45 @@ int start_server(int PORT_NUMBER)
       return 0;
 }
 
-// void* exit_server(void* p) {
-    
-//     char str[10];
-//     sleep(10);
-//     scanf("%s", str);
+/**
+ * function for thread to wait for user
+ * input to close the server
+ * @param p [description]
+ */
+void* close_server(void* p) {
 
-//     if (str[0] == 'q') {
-//         quit = 1;
-//     } else {
-//         quit = 0;
-//     }
-//     pthread_exit(&quit);
-// }
+    // intialize quit
+    quit = '\0';
+
+    // create file descriptor
+    int fd = 0;
+    // to get return value from select()
+    int sret;
+
+    // bit array to represent fds
+    fd_set readfds;
+
+    // struct to determine how long
+    // to wait before timeout
+    struct timeval timeout;
+
+    // zero out bit array
+    FD_ZERO(&readfds);
+
+    // set bit array
+    FD_SET(fd, &readfds);
+
+    // set timeout time
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+
+    // run the select
+    sret = select(8, &readfds, NULL, NULL, &timeout);
+    if (sret != 0) {
+        quit = getchar();
+    }
+    pthread_exit(NULL);
+}
 
 void* handle_connection(void* p) {
 
@@ -146,19 +187,20 @@ void* handle_connection(void* p) {
     char* req = parse_request(request);
     if (strcmp(req, "favicon.ico") == 0) {
         close(fd);
+        free(req);
         pthread_exit(NULL);
     }
 
     // this is the message that we'll send back
     char reply[9999] = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n"; //<html><p>"; //</p></html>";
     char* add = read_html_file(req);
-    printf("%s\n", add);
+    free(req);
     strcat(reply, add);
+    free(add);
       // strcat(reply, resp);
       // char* end = "</p></html>";
       // strcat(reply, end);
       // printf("%s\n", resp);
-      printf("REPLY: %s\n", reply);
 
     // 6. send: send the outgoing message (response) over the socket
     // note that the second argument is a char*, and the third is the number of chars   
@@ -170,10 +212,17 @@ void* handle_connection(void* p) {
     pthread_exit(NULL);
 }
 
+/**
+ * function to parse request portion of HTTP request,
+ * so that can figure out which HTML file to access
+ * @param  request the full request
+ * @return         parsed request
+ */
 char* parse_request(char* request) {
     
-    printf("\n PARSING REQUEST: %s\n", request);
+    printf("\nPARSING REQUEST: %s\n", request);
 
+    // find appropriate indeces to "slice"
     int start = 0, end = 0;
     for (int i = 0; i < strlen(request); i++) {
         if (request[i] == '/' && start == 0) {
@@ -185,6 +234,7 @@ char* parse_request(char* request) {
         }
     }
 
+    // copy over request
     char* out = malloc(sizeof(char) * (end - start + 1));
 
     for (int i = 0; i < end - start; i++) {
@@ -195,7 +245,15 @@ char* parse_request(char* request) {
     return out;
 }
 
+/**
+ * function to read in HTML file, as
+ * requested in the HTTP request
+ * @param  filename filename, as parsed
+ * @return          the filetext
+ */
 char* read_html_file(char* filename) {
+    
+    // create file pointer
     FILE* fp = fopen(filename, "r");
 
     // get length of file
