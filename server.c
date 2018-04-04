@@ -32,7 +32,7 @@ struct Packet
 void* handle_connection(void* p);
 char* parse_request(char* request);
 char* read_html_file(char* filename);
-// void* exit_server(void* p);
+void* exit_server(void* p);
 
 
 // extern char* get_temp(char* file_name);
@@ -145,14 +145,21 @@ void* handle_connection(void* p) {
 
     // parse request
     char* req = parse_request(request);
+    if (strcmp(req, "favicon.ico") == 0) {
+        close(fd);
+        pthread_exit(NULL);
+    }
 
     // this is the message that we'll send back
-    char reply[1000] = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><p>"; //</p></html>";
-      strcat(reply, resp);
-      char* end = "</p></html>";
-      strcat(reply, end);
-      printf("%s\n", resp);
-      printf("%s\n", reply);
+    char reply[9999] = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n"; //<html><p>"; //</p></html>";
+    char* add = read_html_file(req);
+    printf("%s\n", add);
+    strcat(reply, add);
+      // strcat(reply, resp);
+      // char* end = "</p></html>";
+      // strcat(reply, end);
+      // printf("%s\n", resp);
+      printf("REPLY: %s\n", reply);
 
     // 6. send: send the outgoing message (response) over the socket
     // note that the second argument is a char*, and the third is the number of chars   
@@ -171,7 +178,7 @@ char* parse_request(char* request) {
     int start = 0, end = 0;
     for (int i = 0; i < strlen(request); i++) {
         if (request[i] == '/' && start == 0) {
-            start = i;
+            start = i + 1;
         }
         if (request[i] == ' ' && start > 0) {
             end = i;
@@ -193,13 +200,17 @@ char* read_html_file(char* filename) {
     FILE* fp = fopen(filename, "r");
 
     // get length of file
-    int len = fseek(fp, 0, SEEK_END);
+    fseek(fp, 0, SEEK_END);
+    int len = ftell(fp);
 
     // malloc
     char* out = malloc(sizeof(char) * (len + 1));
     if (out == NULL) {
         return NULL;
     }
+
+    // rewind fp to start
+    rewind(fp);
 
     // read file into out
     fread(out, sizeof(char), len - 1, fp);
