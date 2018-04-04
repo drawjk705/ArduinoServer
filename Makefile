@@ -1,5 +1,5 @@
 CC = clang
-ARGS = -Wall -g
+ARGS = -Wall -g -lpthread
 
 all: read server get_temp
 
