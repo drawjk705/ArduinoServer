@@ -97,7 +97,6 @@ int start_server(int PORT_NUMBER)
             p->fd = fd;
             pthread_t t1;
             pthread_create(&t1, NULL, &handle_connection, p);
-            // pthread_create(&t2, NULL, &exit_server, NULL);
             pthread_join(t1, NULL);
             free(p);
         }
