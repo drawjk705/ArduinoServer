@@ -11,7 +11,6 @@
 
 char out[100];
 
-
 /*
 This code configures the file descriptor for use as a serial port.
 */
@@ -65,10 +64,6 @@ char* get_temp(char* file_name) {
                     break;
                 }
             }
-            // if (at_end == 1) {
-            //     at_end = 0;
-            //     return out;
-            // }
         }
     }
 

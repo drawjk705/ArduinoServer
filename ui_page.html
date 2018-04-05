@@ -7,14 +7,22 @@
 <body>
 
     <p class="top">Welcome to our page</p>
+    <form method="post", onsubmit="return false">
+        <input type="radio" name="red"> Red <br>
+        <input type="radio" name="blue"> Blue <br>
+        <input type="radio" name="green"> Green <br>
+        <input type="submit" name="submit">
+    </form>
+
+
+
     <p id="special">
         <!-- working on displaying more and more text -->
         <script>
             var interval = setInterval(sayHello, 1000);
             var text = document.getElementById("special");
-            // when press a key, will 'reset' things
-            document.key
-
+            
+            // when press a key, will 'reset' the page
             document.addEventListener('keydown', function() {
                 console.log('pressed')
                 text.innerHTML = '';

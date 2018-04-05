@@ -16,39 +16,25 @@ http://www.binarii.com/files/papers/c_sockets.txt
 #include <errno.h>
 #include <string.h>
 #include <pthread.h>
+#include "server_helper.h"
 
 char resp[100];
 char quit;
 
-
-pthread_mutex_t lock;
-
-typedef struct Packet packet;
-struct Packet
-{
-    struct sockaddr_in client_addr;
-    int fd;
-};
-
-void* handle_connection(void* p);
-char* parse_request(char* request);
-char* read_html_file(char* filename);
-void* close_server(void* p);
-
+// typedef struct Packet packet;
+// struct Packet
+// {
+//     struct sockaddr_in client_addr;
+//     int fd;
+// };
 
 // extern char* get_temp(char* file_name);
 
 int start_server(int PORT_NUMBER)
 {
 
-      // create lock
-      if (pthread_mutex_init(&lock, NULL) != 0) {
-        perror("couldn't init lock");
-        return -1;
-      }
-
       // structs to represent the server and client
-      struct sockaddr_in server_addr,client_addr;    
+      struct sockaddr_in server_addr, client_addr;    
       
       int sock; // socket descriptor
 
@@ -58,7 +44,7 @@ int start_server(int PORT_NUMBER)
         exit(1);
       }
       int temp;
-      if (setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,&temp,sizeof(int)) == -1) {
+      if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &temp, sizeof(int)) == -1) {
         perror("Setsockopt");
         exit(1);
       }
@@ -67,7 +53,7 @@ int start_server(int PORT_NUMBER)
       server_addr.sin_port = htons(PORT_NUMBER); // specify port number
       server_addr.sin_family = AF_INET;         
       server_addr.sin_addr.s_addr = INADDR_ANY; 
-      bzero(&(server_addr.sin_zero),8); 
+      bzero(&(server_addr.sin_zero), 8); 
       
       // 2. bind: use the socket and associate it with the port number
       if (bind(sock, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1) {
@@ -124,6 +110,7 @@ int start_server(int PORT_NUMBER)
       return 0;
 }
 
+
 /**
  * function for thread to wait for user
  * input to close the server
@@ -171,7 +158,7 @@ void* handle_connection(void* p) {
     struct sockaddr_in client_addr = pack->client_addr;
     int fd = pack->fd;
 
-    printf("Server got a connection from (%s, %d)\n", inet_ntoa(client_addr.sin_addr),ntohs(client_addr.sin_port));
+    printf("Server got a connection from (%s, %d)\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
     // buffer to read data into
     char request[1024];
@@ -183,8 +170,17 @@ void* handle_connection(void* p) {
     // print it to standard out
     printf("This is the incoming request:\n%s\n", request);
 
+    char* req;
+
     // parse request
-    char* req = parse_request(request);
+    int req_type = parse_request(request);
+    if (req_type == 1) {
+       req = parse_get(request);
+    } else if (req_type == 2){
+      req = parse_post(request);
+    }
+
+    // ignore favicon.ico requests
     if (strcmp(req, "favicon.ico") == 0) {
         close(fd);
         free(req);
@@ -212,74 +208,6 @@ void* handle_connection(void* p) {
     pthread_exit(NULL);
 }
 
-/**
- * function to parse request portion of HTTP request,
- * so that can figure out which HTML file to access
- * @param  request the full request
- * @return         parsed request
- */
-char* parse_request(char* request) {
-    
-    printf("\nPARSING REQUEST: %s\n", request);
-
-    // find appropriate indeces to "slice"
-    int start = 0, end = 0;
-    for (int i = 0; i < strlen(request); i++) {
-        if (request[i] == '/' && start == 0) {
-            start = i + 1;
-        }
-        if (request[i] == ' ' && start > 0) {
-            end = i;
-            break;
-        }
-    }
-
-    // copy over request
-    char* out = malloc(sizeof(char) * (end - start + 1));
-
-    for (int i = 0; i < end - start; i++) {
-        out[i] = request[i + start];
-    }
-    // null terminate
-    out[end - start] = '\0';
-    return out;
-}
-
-/**
- * function to read in HTML file, as
- * requested in the HTTP request
- * @param  filename filename, as parsed
- * @return          the filetext
- */
-char* read_html_file(char* filename) {
-    
-    // create file pointer
-    FILE* fp = fopen(filename, "r");
-
-    // get length of file
-    fseek(fp, 0, SEEK_END);
-    int len = ftell(fp);
-
-    // malloc
-    char* out = malloc(sizeof(char) * (len + 1));
-    if (out == NULL) {
-        return NULL;
-    }
-
-    // rewind fp to start
-    rewind(fp);
-
-    // read file into out
-    fread(out, sizeof(char), len - 1, fp);
-
-    // null terminate
-    out[len] = '\0';
-
-    // close file, and return
-    fclose(fp);
-    return out;
-}
-
 
 
 int main(int argc, char *argv[])
@@ -300,7 +228,6 @@ int main(int argc, char *argv[])
     printf("\nPlease specify a port number greater than 1024\n");
     exit(-1);
   }
-
   
 
   start_server(port_number);
