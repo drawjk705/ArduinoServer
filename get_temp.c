@@ -42,9 +42,7 @@ char* get_temp(char* file_name) {
   /*
     Write the rest of the program below, using the read and write system calls.
   */
-
-    int at_end = 0;
-
+ 
     while (1) {
         int index = 0;
 
@@ -56,7 +54,6 @@ char* get_temp(char* file_name) {
             for (int i = 0; i < bytes_read; i++) {
                 out[index++] = buf[i];
                 if (buf[i] == '\n') {
-                    at_end = 1;
                     out[index + 1] = '\0';
                     printf("%s\n", out);
                     return out;

@@ -76,7 +76,7 @@ char* get_post(char* request) {
  * @param  request the full request
  * @return         parsed request
  */
-char* get_URI(char* request) {
+char* get_path(char* request) {
 
     // find appropriate indeces to "slice"
     int start = 0, end = 0;

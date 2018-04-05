@@ -23,7 +23,7 @@ void* handle_connection(void* p);
 
 int is_get(char* request);
 
-char* get_URI(char* request);
+char* get_path(char* request);
 
 char* get_post(char* request);
 

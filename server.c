@@ -55,6 +55,8 @@ int start_server(int PORT_NUMBER)
       // 4. accept: wait here until we get a connection on that port
       int sin_size = sizeof(struct sockaddr_in);
 
+      quit = '\0';
+
       // keep on accepting requests as long has haven't received command to close server
       while (quit != 'q') {
         int fd = accept(sock, (struct sockaddr *)&client_addr,(socklen_t *)&sin_size);
@@ -71,7 +73,7 @@ int start_server(int PORT_NUMBER)
             // create request thread
             pthread_create(&t1, NULL, &handle_connection, p);
 
-            // create exit thread
+            // create close_server thread
             pthread_create(&t2, NULL, &close_server, NULL);            
 
             // join
@@ -152,10 +154,10 @@ void* handle_connection(void* p) {
 
     // this is the message that we'll send back
     char* reply = malloc(sizeof(char) * 100);
-    reply = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n"; //<html><p>"; //</p></html>";
+    strcpy(reply, "HTTP/1.1 200 OK\nContent-Type: text/html\n\n");
 
     // parse request
-    char* req = get_URI(request);
+    char* req = get_path(request);
 
     // ignore favicon.ico requests
     if (strcmp(req, "favicon.ico") == 0) {
@@ -169,8 +171,7 @@ void* handle_connection(void* p) {
     free(req);
 
     // realloc() reply
-    reply = realloc(reply, sizeof(char) * (strlen(reply) + strlen(add) + 1));
-
+    reply = (char*) realloc(reply, sizeof(char) * ((strlen(reply) + strlen(add) + 1)));
     // concatenate
     strcat(reply, add);
     free(add);
