@@ -25,7 +25,7 @@ int is_get(char* request);
 
 char* get_URI(char* request);
 
-char* parse_post(char* request);
+char* get_post(char* request);
 
 char* read_html_file(char* filename);
 

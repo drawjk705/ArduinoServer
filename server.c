@@ -173,7 +173,7 @@ void* handle_connection(void* p) {
     // note that the second argument is a char*, and the third is the number of chars   
     send(fd, reply, strlen(reply), 0);
     if (is_get(request) == 1) {
-      parse_post(request);
+      get_post(request);
     }
       // strcat(reply, resp);
       // char* end = "</p></html>";

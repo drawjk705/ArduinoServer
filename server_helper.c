@@ -44,7 +44,7 @@ int is_get(char* request) {
  *                 as retrieved from the bottom
  *                 of the post request
  */
-char* parse_post(char* request) {
+char* get_post(char* request) {
 
     // create copy of the request,
     // so as not to ruin the original
