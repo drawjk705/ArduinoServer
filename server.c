@@ -5,30 +5,10 @@ and
 http://www.binarii.com/files/papers/c_sockets.txt
  */
 
-#include <sys/select.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <pthread.h>
 #include "server_helper.h"
 
 char resp[100];
 char quit;
-
-// typedef struct Packet packet;
-// struct Packet
-// {
-//     struct sockaddr_in client_addr;
-//     int fd;
-// };
-
-// extern char* get_temp(char* file_name);
 
 int start_server(int PORT_NUMBER)
 {
@@ -175,7 +155,7 @@ void* handle_connection(void* p) {
     // parse request
     int req_type = parse_request(request);
     if (req_type == 1) {
-       req = parse_get(request);
+      req = parse_get(request);
     } else if (req_type == 2){
       req = parse_post(request);
     }

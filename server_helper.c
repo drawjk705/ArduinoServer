@@ -10,13 +10,32 @@
 #include <string.h>
 #include <pthread.h>
 #include "server_helper.h"
-#include "packet.h"
 
-char resp[100];
-char quit;
-
-
+/**
+ * parse HTTP request to see if it's a GET or POST
+ * @param  request the HTTP request
+ * @return         1 if GET, 2 if POST
+ */
 int parse_request(char* request) {
+    
+    char type[5];
+
+    for (int i = 0; i < strlen(request); i++) {
+        if (request[i] == ' ') {
+            type[i] = '\0';
+            break;
+        } else {
+            type[i] = request[i];
+        }
+    }
+
+    if (strcmp(type, "GET") == 0) {
+        return 1;
+    } else if (strcmp(type, "POST") == 0) {
+        printf("%s\n", type);
+        printf("%s\n", request);
+        return 2;
+    }
     return 0;
 }
 
@@ -33,10 +52,6 @@ char* parse_post(char* request) {
  * @return         parsed request
  */
 char* parse_get(char* request) {
-
-    // need to deal with cases in which request is for a post
-    
-    printf("\nPARSING REQUEST: %s\n", request);
 
     // find appropriate indeces to "slice"
     int start = 0, end = 0;
