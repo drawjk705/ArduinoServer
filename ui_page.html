@@ -2,6 +2,7 @@
 <html>
 <!-- <script src="jquery.js"></script> -->
 <head>
+    <link rel="stylesheet" type="text/css" href="ui_page.css">
     <title>Our page</title>
 </head>
 <body>
@@ -20,16 +21,24 @@
                 <th>
                     Select Tempetature Type
                 </th>
-                <!-- Other tbd -->
+                <!-- Something else -->
                 <th>
-                    
+                    Something else
                 </th>
             </tr>
         </thead>
-        <!-- Body for  -->
+        <!-- Body for selction options -->
         <tbody>
-            
-
+            <tr>
+                <td>
+                    <form method="post">
+                        <input type="radio" name="red"> Red <br>
+                        <input type="radio" name="blue"> Blue <br>
+                        <input type="radio" name="green"> Green <br>
+                        <input type="submit" name="submit">
+                    </form>
+                </td>
+            </tr>
         </tbody>
         <!-- Single buttons -->
         <tfoot>
@@ -45,17 +54,6 @@
 
 
     </table>
-
-
-
-
-    <form method="post">
-        <input type="radio" name="red"> Red <br>
-        <input type="radio" name="blue"> Blue <br>
-        <input type="radio" name="green"> Green <br>
-        <input type="submit" name="submit">
-    </form>
-
 
 
     <p id="special">
