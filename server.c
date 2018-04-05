@@ -151,7 +151,8 @@ void* handle_connection(void* p) {
     printf("This is the incoming request:\n%s\n", request);
 
     // this is the message that we'll send back
-    char reply[9999] = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n"; //<html><p>"; //</p></html>";
+    char* reply = malloc(sizeof(char) * 100);
+    reply = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n"; //<html><p>"; //</p></html>";
 
     // parse request
     char* req = get_URI(request);
@@ -166,6 +167,11 @@ void* handle_connection(void* p) {
     // read the HTML file, and append it to the reply
     char* add = read_html_file(req);
     free(req);
+
+    // realloc() reply
+    reply = realloc(reply, sizeof(char) * (strlen(reply) + strlen(add) + 1));
+
+    // concatenate
     strcat(reply, add);
     free(add);
 
@@ -180,6 +186,8 @@ void* handle_connection(void* p) {
       // strcat(reply, end);
       // printf("%s\n", resp);
     
+    free(reply);
+
     // 7. close: close the connection
     close(fd);
     printf("Server closed connection\n");

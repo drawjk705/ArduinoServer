@@ -3,8 +3,8 @@ ARGS = -Wall -g -lpthread
 
 all: read server get_temp
 
-read: read_usb.c
-	$(CC) -o read $(ARGS) read_usb.c
+# read: read_usb.c
+# 	$(CC) -o read $(ARGS) read_usb.c
 
 
 ## making .o file for server_helper
@@ -19,4 +19,4 @@ server: server_helper.o get_temp.o server.o
 	$(CC) -o server $(ARGS) server.c get_temp.o server_helper.o
 
 clear:
-	rm -rf read server get_temp
+	rm -rf server get_temp
