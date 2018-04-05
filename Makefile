@@ -15,8 +15,8 @@ server_helper: server_helper.c
 get_temp: get_temp.c
 	$(CC) -c $(ARGS) get_temp.c
 
-server: server_helper.o get_temp.o server.o
+server: server_helper.o get_temp server.o
 	$(CC) -o server $(ARGS) server.c get_temp.o server_helper.o
 
 clear:
-	rm -rf server get_temp
+	rm -rf *.o server get_temp

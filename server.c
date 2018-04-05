@@ -200,8 +200,8 @@ void* handle_connection(void* p) {
 int main(int argc, char *argv[])
 {
 
-    // strcpy(resp, get_temp("/dev/ttyACM0"));
-    // printf("%s\n", resp);
+    strcpy(resp, get_temp("/dev/ttyACM0"));
+    printf("%s\n", resp);
 
 
   // check the number of arguments
