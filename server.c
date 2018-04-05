@@ -150,37 +150,35 @@ void* handle_connection(void* p) {
     // print it to standard out
     printf("This is the incoming request:\n%s\n", request);
 
-    char* req;
+    // this is the message that we'll send back
+    char reply[9999] = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n"; //<html><p>"; //</p></html>";
 
     // parse request
-    int req_type = parse_request(request);
-    if (req_type == 1) {
-      req = parse_get(request);
-    } else if (req_type == 2){
-      req = parse_post(request);
-    }
+    char* req = get_URI(request);
 
     // ignore favicon.ico requests
     if (strcmp(req, "favicon.ico") == 0) {
-        close(fd);
-        free(req);
-        pthread_exit(NULL);
+          close(fd);
+          free(req);
+          pthread_exit(NULL);
     }
 
-    // this is the message that we'll send back
-    char reply[9999] = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n"; //<html><p>"; //</p></html>";
+    // read the HTML file, and append it to the reply
     char* add = read_html_file(req);
     free(req);
     strcat(reply, add);
     free(add);
-      // strcat(reply, resp);
-      // char* end = "</p></html>";
-      // strcat(reply, end);
-      // printf("%s\n", resp);
 
     // 6. send: send the outgoing message (response) over the socket
     // note that the second argument is a char*, and the third is the number of chars   
     send(fd, reply, strlen(reply), 0);
+    if (is_get(request) == 1) {
+      parse_post(request);
+    }
+      // strcat(reply, resp);
+      // char* end = "</p></html>";
+      // strcat(reply, end);
+      // printf("%s\n", resp);
     
     // 7. close: close the connection
     close(fd);

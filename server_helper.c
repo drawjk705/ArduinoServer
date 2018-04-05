@@ -16,7 +16,7 @@
  * @param  request the HTTP request
  * @return         1 if GET, 2 if POST
  */
-int parse_request(char* request) {
+int is_get(char* request) {
     
     char type[5];
 
@@ -30,17 +30,42 @@ int parse_request(char* request) {
     }
 
     if (strcmp(type, "GET") == 0) {
-        return 1;
+        return 0;
     } else if (strcmp(type, "POST") == 0) {
-        printf("%s\n", type);
-        printf("%s\n", request);
-        return 2;
+        return 1;
     }
-    return 0;
+    return -1;
 }
 
+/**
+ * function to parse the post data
+ * @param  request the HTTP request
+ * @return         the data that's being posted,
+ *                 as retrieved from the bottom
+ *                 of the post request
+ */
 char* parse_post(char* request) {
-    return NULL;
+
+    // create copy of the request,
+    // so as not to ruin the original
+    char rcpy[strlen(request) + 1];
+    strcpy(rcpy, request);
+
+    // delimiter for tokenizing
+    const char delim[2] = "\n";
+    char* tok = strtok(rcpy, delim);
+    // keep on tokenizing until hit blank line
+    while (tok != NULL) {
+        // indicates blank line
+        if (strlen(tok) == 1 && tok[0] == 13) {
+            // tokenize one last time, and then break
+            tok = strtok(NULL, delim);
+            break;    
+        }
+        tok = strtok(NULL, delim);
+    }
+    // return the value
+    return tok;
 }
 
 
@@ -51,7 +76,7 @@ char* parse_post(char* request) {
  * @param  request the full request
  * @return         parsed request
  */
-char* parse_get(char* request) {
+char* get_URI(char* request) {
 
     // find appropriate indeces to "slice"
     int start = 0, end = 0;

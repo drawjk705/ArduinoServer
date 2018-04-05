@@ -21,9 +21,9 @@ struct Packet
 
 void* handle_connection(void* p);
 
-int parse_request(char* request);
+int is_get(char* request);
 
-char* parse_get(char* request);
+char* get_URI(char* request);
 
 char* parse_post(char* request);
 
