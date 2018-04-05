@@ -187,6 +187,7 @@ void* handle_connection(void* p) {
       // printf("%s\n", resp);
     
     free(reply);
+    
 
     // 7. close: close the connection
     close(fd);
