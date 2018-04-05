@@ -1,0 +1,5 @@
+=== Additional Features ===
+
+1.) Change colors
+2.) Display text
+3.) Automatically update temperature
