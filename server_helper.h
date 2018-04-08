@@ -19,8 +19,6 @@ struct Packet
     int fd;
 };
 
-char* get_temp(char* file_name);
-
 void* handle_connection(void* p);
 
 int is_get(char* request);

@@ -23,7 +23,9 @@ void configure(int fd) {
 }
 
 
-char* get_temp(char* file_name) {
+void* get_temp(void* p) {
+
+  char* file_name = (char*) p;
   
   // try to open the file for reading and writing
   // you may need to change the flags depending on your platform

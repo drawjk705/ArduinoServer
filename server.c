@@ -6,13 +6,13 @@ http://www.binarii.com/files/papers/c_sockets.txt
  */
 
 #include "server_helper.h"
+#include "arduino_funcs.h"
 
 char resp[100];
 char quit;
 
 int start_server(int PORT_NUMBER)
 {
-
       // structs to represent the server and client
       struct sockaddr_in server_addr, client_addr;    
       
@@ -196,12 +196,11 @@ void* handle_connection(void* p) {
 }
 
 
+int main(int argc, char *argv[]) {
 
-int main(int argc, char *argv[])
-{
-
-    strcpy(resp, get_temp("/dev/ttyACM0"));
-    printf("%s\n", resp);
+    // char* filename = "/dev/ttyACM0";
+    // pthread_t temp_thread;
+    // pthread_create(&temp_thread, NULL, &get_temps, filename);
 
 
   // check the number of arguments
