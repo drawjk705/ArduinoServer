@@ -1,4 +1,5 @@
 #include "arduino_funcs.h"
+#include "linkedlist.h"
 
 /*
 This code configures the file descriptor for use as a serial port.
@@ -33,8 +34,21 @@ void* get_temps(void* p) {
 
   configure(fd);
 
+  // create LinkedList
+  linkedlist* l = malloc(sizeof(linkedlist));
+
   while (1) {
     float* f = read_temp(file_name, fd);
+    
+    // add temperature to linked list,
+    // to display most recent temperatures
+    add_to_tail(f, l);
+
+    // remove the least recently added
+    // temperature if size exceeds 100
+    if (l->size > 100) {
+      remove_from_front(l);
+    }
     
     ////////////////////////
     // write to HTML file //
@@ -45,7 +59,7 @@ void* get_temps(void* p) {
 
 
 
-  return NULL;
+  pthread_exit(NULL);
 }
 
 /**

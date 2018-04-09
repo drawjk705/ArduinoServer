@@ -8,6 +8,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <string.h>
+#include <pthread.h>
 
 // Arduino-specific functions
 void configure(int fd);

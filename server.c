@@ -7,6 +7,7 @@ http://www.binarii.com/files/papers/c_sockets.txt
 
 #include "server_helper.h"
 #include "arduino_funcs.h"
+#include "linkedlist.h"
 
 char resp[100];
 char quit;
@@ -74,7 +75,7 @@ int start_server(int PORT_NUMBER)
             pthread_create(&t1, NULL, &handle_connection, p);
 
             // create close_server thread
-            pthread_create(&t2, NULL, &close_server, NULL);            
+            pthread_create(&t2, NULL, &close_server, NULL);
 
             // join
             pthread_join(t1, NULL);
@@ -198,9 +199,10 @@ void* handle_connection(void* p) {
 
 int main(int argc, char *argv[]) {
 
-    // char* filename = "/dev/ttyACM0";
-    // pthread_t temp_thread;
-    // pthread_create(&temp_thread, NULL, &get_temps, filename);
+  // create thread to handle arduino functionality
+  char* filename = "/dev/ttyACM0";
+  pthread_t temp_thread;
+  pthread_create(&temp_thread, NULL, &get_temps, filename);           
 
 
   // check the number of arguments
@@ -217,5 +219,6 @@ int main(int argc, char *argv[]) {
   
 
   start_server(port_number);
+  pthread_join(temp_thread, NULL);
 }
 
