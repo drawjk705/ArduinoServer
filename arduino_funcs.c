@@ -1,10 +1,11 @@
 #include "arduino_funcs.h"
 #include "server_helper.h"
 
-float get_max_temp(linkedlist* l) {
+float get_max_temp(void* l) {
   float max = 0;
-  float** array = (float**) to_array(l);
-  for (int i = 0; i < l->size; i++) {
+  linkedlist* ll = (linkedlist*) l;
+  float** array = (float**) to_array(ll);
+  for (int i = 0; i < ll->size; i++) {
     if (*(array[i]) > max) {
       max = *(array[i]);
     }
@@ -12,10 +13,11 @@ float get_max_temp(linkedlist* l) {
   return max;
 }
 
-float get_min_temp(linkedlist* l) {
+float get_min_temp(void* l) {
   float min = 999;
-  float** array = (float**) to_array(l);
-  for (int i = 0; i < l->size; i++) {
+  linkedlist* ll = (linkedlist*) l;
+  float** array = (float**) to_array(ll);
+  for (int i = 0; i < ll->size; i++) {
     if (*(array[i]) < min) {
       min = *(array[i]);
     }
@@ -23,13 +25,14 @@ float get_min_temp(linkedlist* l) {
   return min;
 }
 
-float get_avg_temp(linkedlist* l) {
-  float total;
-  float** array = (float**) to_array(l);
-  for (int i = 0; i < l->size; i++) {
+float get_avg_temp(void* l) {
+  float total = 0;
+  linkedlist* ll = (linkedlist*) l;
+  float** array = (float**) to_array(ll);
+  for (int i = 0; i < ll->size; i++) {
     total += *(array[i]);
   }
-  return total / (float) l->size;
+  return total / (float) ll->size;
 }
 
 
