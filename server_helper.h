@@ -20,6 +20,7 @@ struct Packet
     int fd;
     linkedlist** l;
     char* filename;
+    char* quit_ptr;
 };
 
 void* handle_connection(void* p);

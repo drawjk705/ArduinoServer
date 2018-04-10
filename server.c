@@ -11,6 +11,19 @@ http://www.binarii.com/files/papers/c_sockets.txt
 char resp[100];
 char quit;
 
+void* say_hello(void* p) {
+  int i = 0;
+  while(quit != 'q') {
+    // pthread_mutex_lock(&lock);
+    printf("%d\n", i++);
+    // sleep(2);
+    if (i % 5 == 0) {
+      // pthread_mutex_unlock(&lock);
+    }
+  }
+  pthread_exit(NULL);
+}
+
 int start_server(int PORT_NUMBER)
 {
       // structs to represent the server and client
@@ -65,11 +78,17 @@ int start_server(int PORT_NUMBER)
       // create thread to handle arduino functionality
       pthread_t temp_thread;
       // pthread_create(&temp_thread, NULL, &get_started, filename);
+
+      quit = '\0';
+
       packet* p = get_started(filename);
       p->l = &l;
       p->filename = filename;
+      p->quit_ptr = &quit;
 
-      quit = '\0';
+      pthread_t t0;
+
+      pthread_create(&t0, NULL, &get_temps, p);
 
       // keep on accepting requests as long has haven't received command to close server
       while (quit != 'q') {
@@ -95,7 +114,7 @@ int start_server(int PORT_NUMBER)
         timeout.tv_sec = 3;
         timeout.tv_usec = 0;
 
-        pthread_create(&temp_thread, NULL, &get_temps, p);
+        // pthread_create(&temp_thread, NULL, &get_temps, p);
 
         // run the select
         sret = select(8, &readfds, NULL, NULL, &timeout);
@@ -133,8 +152,8 @@ int start_server(int PORT_NUMBER)
             free(p);
         }
       }
-      pthread_join(temp_thread, NULL);
-    } 
+    }
+    pthread_join(t0, NULL);
 
       // 8. close: close the socket
       close(sock);
@@ -179,6 +198,7 @@ void* close_server(void* p) {
     // run the select
     sret = select(8, &readfds, NULL, NULL, &timeout);
     if (sret != 0) {
+      printf("pressed q\n");
         quit = getchar();
     }
     pthread_exit(NULL);
@@ -260,7 +280,6 @@ int main(int argc, char *argv[]) {
   // pthread_t temp_thread;
   // pthread_create(&temp_thread, NULL, &get_temps, p);
 
-
   // check the number of arguments
   if (argc != 2) {
       printf("\nUsage: %s [port_number]\n", argv[0]);
@@ -276,5 +295,6 @@ int main(int argc, char *argv[]) {
 
   start_server(port_number);
   // pthread_join(temp_thread, NULL);
+  // 
 }
 

@@ -83,16 +83,18 @@ void* get_temps(void* p) {
 
   packet* pack = (packet*) p;
 
+  // unpack packet
   linkedlist** l = pack->l;
   char* file_name = pack->filename;
   int fd = pack->fd;
+  char* quit = pack->quit_ptr;
 
   // do a few times to get rid of garbage
   for (int i = 0; i < 10; i++) {
     read_temp(file_name, fd);
   }
-  int i = 100;
-  while (i > 0) {
+  // int i = 100;
+  while (*quit != 'q') {
     // sleep(10);
     float* f = read_temp(file_name, fd);
     
@@ -102,16 +104,18 @@ void* get_temps(void* p) {
 
     // remove the least recently added
     // temperature if size exceeds 100
-    if ((*l)->size > 100) {
-      remove_from_front(*l);
-    }
+    // if ((*l)->size > 100) {
+    //   remove_from_front(*l);
+    // }
     
     ////////////////////////
     // write to HTML file //
     ////////////////////////
 
     free(f);
-    printf("%d\n", i--);
+    printf("completed readings\n");
+    sleep(2);
+    // printf("%d\n", i--);
   }
 
 
@@ -136,7 +140,9 @@ float* read_temp(char* file_name, int fd) {
 
   char buf[100];
 
-  while (1) {
+  int end = 0;
+
+  while (end == 0) {
       int bytes_read = read(fd, buf, 100);
 
       for (int i = 0; i < bytes_read; i++) {
@@ -144,6 +150,7 @@ float* read_temp(char* file_name, int fd) {
           if (buf[i] == '\n') {
               out[index + 1] = '\0';
               printf("%s\n", out);
+              end = 1;
               break;
           }
       }
