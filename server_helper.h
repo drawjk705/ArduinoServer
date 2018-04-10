@@ -11,12 +11,15 @@
 #include <errno.h>
 #include <string.h>
 #include <pthread.h>
+#include "linkedlist.h"
 
 typedef struct Packet packet;
 struct Packet
 {
     struct sockaddr_in client_addr;
     int fd;
+    linkedlist** l;
+    char* filename;
 };
 
 void* handle_connection(void* p);

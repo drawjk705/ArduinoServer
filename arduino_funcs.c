@@ -1,5 +1,37 @@
 #include "arduino_funcs.h"
-#include "linkedlist.h"
+#include "server_helper.h"
+
+float get_max_temp(linkedlist* l) {
+  float max = 0;
+  float** array = (float**) to_array(l);
+  for (int i = 0; i < l->size; i++) {
+    if (*(array[i]) > max) {
+      max = *(array[i]);
+    }
+  }
+  return max;
+}
+
+float get_min_temp(linkedlist* l) {
+  float min = 999;
+  float** array = (float**) to_array(l);
+  for (int i = 0; i < l->size; i++) {
+    if (*(array[i]) < min) {
+      min = *(array[i]);
+    }
+  } 
+  return min;
+}
+
+float get_avg_temp(linkedlist* l) {
+  float total;
+  float** array = (float**) to_array(l);
+  for (int i = 0; i < l->size; i++) {
+    total += *(array[i]);
+  }
+  return total / (float) l->size;
+}
+
 
 /*
 This code configures the file descriptor for use as a serial port.
@@ -17,8 +49,13 @@ void configure(int fd) {
  * @param p pointer to filename
  */
 void* get_temps(void* p) {
+
+  // unpack packet
+  packet* pack = (packet*) p;
+
   
-  char* file_name = (char*) p;
+  char* file_name = pack->filename;
+  linkedlist** l = pack->l;
 
   // try to open the file for reading and writing
   // you may need to change the flags depending on your platform
@@ -34,20 +71,23 @@ void* get_temps(void* p) {
 
   configure(fd);
 
-  // create LinkedList
-  linkedlist* l = malloc(sizeof(linkedlist));
+  // do a few times to get rid of garbage
+  for (int i = 0; i < 10; i++) {
+    read_temp(file_name, fd);
+  }
 
   while (1) {
+    // sleep(10);
     float* f = read_temp(file_name, fd);
     
     // add temperature to linked list,
     // to display most recent temperatures
-    add_to_tail(f, l);
+    add_to_tail(f, *l);
 
     // remove the least recently added
     // temperature if size exceeds 100
-    if (l->size > 100) {
-      remove_from_front(l);
+    if ((*l)->size > 100) {
+      remove_from_front(*l);
     }
     
     ////////////////////////
@@ -75,26 +115,21 @@ float* read_temp(char* file_name, int fd) {
   
   char out[100];
 
+  int index = 0;
+
+  char buf[100];
+
   while (1) {
+      int bytes_read = read(fd, buf, 100);
 
-    int index = 0;
-
-    char buf[100];
-
-    while (1) {
-        int bytes_read = read(fd, buf, 100);
-
-        for (int i = 0; i < bytes_read; i++) {
-            out[index++] = buf[i];
-            if (buf[i] == '\n') {
-                out[index + 1] = '\0';
-                printf("%s\n", out);
-                break;
-                // out[0] = '\0';
-                // break;
-            }
-        }
-    }
+      for (int i = 0; i < bytes_read; i++) {
+          out[index++] = buf[i];
+          if (buf[i] == '\n') {
+              out[index + 1] = '\0';
+              printf("%s\n", out);
+              break;
+          }
+      }
   }
   float* f = strip_letters(out);
 

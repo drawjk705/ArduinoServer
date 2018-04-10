@@ -15,6 +15,12 @@ void configure(int fd);
 
 void* get_temps(void* p);
 
+float get_avg_temp(linkedlist* l);
+
+float get_max_temp(linkedlist* l);
+
+float get_min_temp(linkedlist* l);
+
 float* read_temp(char* file_name, int fd);
 
 float* strip_letters(char* str);

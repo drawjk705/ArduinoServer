@@ -7,7 +7,6 @@ http://www.binarii.com/files/papers/c_sockets.txt
 
 #include "server_helper.h"
 #include "arduino_funcs.h"
-#include "linkedlist.h"
 
 char resp[100];
 char quit;
@@ -56,6 +55,17 @@ int start_server(int PORT_NUMBER)
       // 4. accept: wait here until we get a connection on that port
       int sin_size = sizeof(struct sockaddr_in);
 
+      linkedlist* l = malloc(sizeof(linkedlist));
+      char* filename = "/dev/ttyACM0";
+
+      packet* p = malloc(sizeof(packet));
+      p->filename = filename;
+      p->l = &l;
+
+      // create thread to handle arduino functionality
+      pthread_t temp_thread;
+      pthread_create(&temp_thread, NULL, &get_temps, p);
+
       quit = '\0';
 
       // keep on accepting requests as long has haven't received command to close server
@@ -73,7 +83,6 @@ int start_server(int PORT_NUMBER)
             pthread_t t1, t2;
             // create request thread
             pthread_create(&t1, NULL, &handle_connection, p);
-
             // create close_server thread
             pthread_create(&t2, NULL, &close_server, NULL);
 
@@ -85,6 +94,7 @@ int start_server(int PORT_NUMBER)
             free(p);
         }
       }
+      pthread_join(temp_thread, NULL);
 
       // 8. close: close the socket
       close(sock);
@@ -199,10 +209,16 @@ void* handle_connection(void* p) {
 
 int main(int argc, char *argv[]) {
 
-  // create thread to handle arduino functionality
-  char* filename = "/dev/ttyACM0";
-  pthread_t temp_thread;
-  pthread_create(&temp_thread, NULL, &get_temps, filename);           
+  // linkedlist* l = malloc(sizeof(linkedlist));
+  // char* filename = "/dev/ttyACM0";
+
+  // packet* p = malloc(sizeof(packet));
+  // p->filename = filename;
+  // p->l = &l;
+
+  // // create thread to handle arduino functionality
+  // pthread_t temp_thread;
+  // pthread_create(&temp_thread, NULL, &get_temps, p);
 
 
   // check the number of arguments
@@ -219,6 +235,6 @@ int main(int argc, char *argv[]) {
   
 
   start_server(port_number);
-  pthread_join(temp_thread, NULL);
+  // pthread_join(temp_thread, NULL);
 }
 
