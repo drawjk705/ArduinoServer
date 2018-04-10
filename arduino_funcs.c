@@ -149,13 +149,14 @@ float* read_temp(char* file_name, int fd) {
           out[index++] = buf[i];
           if (buf[i] == '\n') {
               out[index + 1] = '\0';
-              printf("%s\n", out);
+              // printf("%s\n", out);
               end = 1;
               break;
           }
       }
   }
   float* f = strip_letters(out);
+  printf("%f\n", *f);
 
   return f;
 
@@ -192,4 +193,11 @@ float* strip_letters(char* str) {
   *f = atof(out);
 
   return f;
+}
+
+void write_to_arduino(int fd, char* str) {
+  if (write(fd, str, strlen(str)) != strlen(str)) {
+    perror("Could not write to Arduino");
+    exit(1);
+  }
 }

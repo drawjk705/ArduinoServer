@@ -1,3 +1,5 @@
+/** Arduino-specific functions **/
+
 #include <sys/types.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -10,7 +12,6 @@
 #include <string.h>
 #include <pthread.h>
 
-// Arduino-specific functions
 void configure(int fd);
 
 void* get_started(void* p);
@@ -26,3 +27,5 @@ float get_min_temp(void* l);
 float* read_temp(char* file_name, int fd);
 
 float* strip_letters(char* str);
+
+void write_to_arduino(int fd, char* str);

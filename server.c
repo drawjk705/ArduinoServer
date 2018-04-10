@@ -71,14 +71,6 @@ int start_server(int PORT_NUMBER)
       linkedlist* l = malloc(sizeof(linkedlist));
       char* filename = "/dev/ttyACM0";
 
-      // packet* p = malloc(sizeof(packet));
-      // p->filename = filename;
-      // p->l = &l;
-
-      // create thread to handle arduino functionality
-      pthread_t temp_thread;
-      // pthread_create(&temp_thread, NULL, &get_started, filename);
-
       quit = '\0';
 
       packet* p = get_started(filename);
@@ -93,6 +85,10 @@ int start_server(int PORT_NUMBER)
       // keep on accepting requests as long has haven't received command to close server
       while (quit != 'q') {
 
+        pthread_t close;
+
+        // create close_server thread
+        pthread_create(&close, NULL, &close_server, NULL);
 
         // to get return value from select()
         int sret;
@@ -138,20 +134,19 @@ int start_server(int PORT_NUMBER)
             }
             p->client_addr = client_addr;
             p->fd = fd;
-            pthread_t t1, t2;
+            pthread_t req;
             // create request thread
-            pthread_create(&t1, NULL, &handle_connection, p);
-            // create close_server thread
-            pthread_create(&t2, NULL, &close_server, NULL);
+            pthread_create(&req, NULL, &handle_connection, p);
+            
 
             // join
-            pthread_join(t1, NULL);
-            pthread_join(t2, NULL);
+            pthread_join(req, NULL);
 
             // free p
             free(p);
         }
       }
+      pthread_join(close, NULL);
     }
     pthread_join(t0, NULL);
 
