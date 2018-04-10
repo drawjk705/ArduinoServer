@@ -51,14 +51,13 @@ void configure(int fd) {
  * function to get temperature from Arduino
  * @param p pointer to filename
  */
-void* get_temps(void* p) {
+void* get_started(void* p) {
 
   // unpack packet
-  packet* pack = (packet*) p;
+  packet* pack = malloc(sizeof(packet));
 
   
-  char* file_name = pack->filename;
-  linkedlist** l = pack->l;
+  char* file_name = (char*) p;
 
   // try to open the file for reading and writing
   // you may need to change the flags depending on your platform
@@ -74,12 +73,26 @@ void* get_temps(void* p) {
 
   configure(fd);
 
+  // add fd to pack
+  pack->fd = fd;
+
+  return pack;
+}
+
+void* get_temps(void* p) {
+
+  packet* pack = (packet*) p;
+
+  linkedlist** l = pack->l;
+  char* file_name = pack->filename;
+  int fd = pack->fd;
+
   // do a few times to get rid of garbage
   for (int i = 0; i < 10; i++) {
     read_temp(file_name, fd);
   }
-
-  while (1) {
+  int i = 100;
+  while (i > 0) {
     // sleep(10);
     float* f = read_temp(file_name, fd);
     
@@ -98,6 +111,7 @@ void* get_temps(void* p) {
     ////////////////////////
 
     free(f);
+    printf("%d\n", i--);
   }
 
 

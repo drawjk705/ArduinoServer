@@ -58,20 +58,59 @@ int start_server(int PORT_NUMBER)
       linkedlist* l = malloc(sizeof(linkedlist));
       char* filename = "/dev/ttyACM0";
 
-      packet* p = malloc(sizeof(packet));
-      p->filename = filename;
-      p->l = &l;
+      // packet* p = malloc(sizeof(packet));
+      // p->filename = filename;
+      // p->l = &l;
 
       // create thread to handle arduino functionality
       pthread_t temp_thread;
-      pthread_create(&temp_thread, NULL, &get_temps, p);
+      // pthread_create(&temp_thread, NULL, &get_started, filename);
+      packet* p = get_started(filename);
+      p->l = &l;
+      p->filename = filename;
 
       quit = '\0';
 
       // keep on accepting requests as long has haven't received command to close server
       while (quit != 'q') {
-        int fd = accept(sock, (struct sockaddr *)&client_addr,(socklen_t *)&sin_size);
-        if (fd != -1) {
+
+
+        // to get return value from select()
+        int sret;
+
+        // bit array to represent fds
+        fd_set readfds;
+
+        // struct to determine how long
+        // to wait before timeout
+        struct timeval timeout;
+
+        // zero out bit array
+        FD_ZERO(&readfds);
+
+        // set bit array
+        FD_SET(sock, &readfds);
+
+        // set timeout time
+        timeout.tv_sec = 3;
+        timeout.tv_usec = 0;
+
+        pthread_create(&temp_thread, NULL, &get_temps, p);
+
+        // run the select
+        sret = select(8, &readfds, NULL, NULL, &timeout);
+
+
+
+        if (sret == 0) {
+          printf("SRET returned 0\n");
+        }
+
+
+        if (sret != 0) {
+          printf("SRET returned %d\n", sret);
+          int fd = accept(sock, (struct sockaddr *)&client_addr,(socklen_t *)&sin_size);
+          if (fd != -1) {
 
             // create packet ptr with necessary data for request thread
             packet* p = malloc(sizeof(packet));
@@ -95,6 +134,7 @@ int start_server(int PORT_NUMBER)
         }
       }
       pthread_join(temp_thread, NULL);
+    } 
 
       // 8. close: close the socket
       close(sock);

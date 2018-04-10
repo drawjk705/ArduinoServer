@@ -13,6 +13,8 @@
 // Arduino-specific functions
 void configure(int fd);
 
+void* get_started(void* p);
+
 void* get_temps(void* p);
 
 float get_avg_temp(void* l);
