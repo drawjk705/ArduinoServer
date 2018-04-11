@@ -3,28 +3,38 @@
 <script src="jquery.js"></script>
 <head>
     <title>Our page</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <script src="project.js"></script>
+    <h1>Welcome to Our Project</h1>
+    <button type="button" onclick="sleep()">Sleep Mode</button>
 
-    <p class="top">Welcome to our page</p>
-    <p id="special">
-        <!-- working on displaying more and more text -->
-        <script type="text/javascript">
-            var interval = setInterval(sayHello, 1000);
-            // when press a key, will 'reset' things
-            $(this).keydown(function() {
-                console.log('pressed')
-                $("#special").html("");
-            });
+    <h2>Display temperature in Celsius or Fahrenheit</h2>
+    <div class="button-group" style="width:100%">
+    <button id="buttonC">C</button>
+    <button id="buttonF">F</button>
+    </div>
+    <p id="display-t">Place holder to display and change the temperature</p>    
 
-            function sayHello() {
-                $("#special").append("hello<br>");
-                console.log('hello');
-            }
-        </script>        
-    </p>
 
-    
+    <h2>Change color of Arduino light</h2>
+    <div class="button-group" style="width:100%">
+    <button id="color_red">Red</button>
+    <button id="color_blue">Blue</button>
+    <button id="color_green">Green</button>
+    </div>
+    <p id="display-t">Check Arduino to see the light change!</p>
+
+
+    <h2>Change display of Arduino text</h2>
+    <div class="button-group" style="width:100%">
+    <button id="L">LLLL</button>
+    <button id="H">HHHH</button>
+    </div>
+    <p id="display-t">Check Arduino to see the display!</p>
+
+
 
 </body>
 </html>
