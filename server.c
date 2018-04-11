@@ -110,12 +110,8 @@ int start_server(int PORT_NUMBER)
         timeout.tv_sec = 3;
         timeout.tv_usec = 0;
 
-        // pthread_create(&temp_thread, NULL, &get_temps, p);
-
         // run the select
         sret = select(8, &readfds, NULL, NULL, &timeout);
-
-
 
         if (sret == 0) {
           printf("SRET returned 0\n");
@@ -138,7 +134,6 @@ int start_server(int PORT_NUMBER)
             // create request thread
             pthread_create(&req, NULL, &handle_connection, p);
             
-
             // join
             pthread_join(req, NULL);
 
@@ -248,10 +243,6 @@ void* handle_connection(void* p) {
     if (is_get(request) == 1) {
       get_post(request);
     }
-      // strcat(reply, resp);
-      // char* end = "</p></html>";
-      // strcat(reply, end);
-      // printf("%s\n", resp);
     
     free(reply);
 
@@ -263,17 +254,6 @@ void* handle_connection(void* p) {
 
 
 int main(int argc, char *argv[]) {
-
-  // linkedlist* l = malloc(sizeof(linkedlist));
-  // char* filename = "/dev/ttyACM0";
-
-  // packet* p = malloc(sizeof(packet));
-  // p->filename = filename;
-  // p->l = &l;
-
-  // // create thread to handle arduino functionality
-  // pthread_t temp_thread;
-  // pthread_create(&temp_thread, NULL, &get_temps, p);
 
   // check the number of arguments
   if (argc != 2) {
