@@ -1,0 +1,43 @@
+
+
+body {
+    background-color: powderblue;
+}
+
+h1 {
+	font-size: 40px;
+    color: navy;
+}
+
+h2 {
+	font-size: 30px;
+    color: blue;
+    
+}
+
+p {
+	font-size: 20px;
+    color: purple;
+}
+
+.button-group button {
+    background-color: coral; 
+    border: 1px solid red;
+    font color: navy; /* White text */
+    font size: 20px;
+    font-weight: bold;
+    padding: 10px 24px; /* Some padding */
+    cursor: pointer; /* Pointer/hand icon */
+    width: 30%; /* Set a width if needed */
+   	display: block; /* Make the buttons appear below each other */
+}
+
+
+.button-group button:not(:last-child) {
+    border-right: none; /* Prevent double borders */
+}
+
+/* Add a background color on hover */
+.button-group button:hover {
+    background-color: #3e8e41;
+}
