@@ -2,7 +2,7 @@
 
                      Copyright 2008 Gravitech
                         All Rights Reserved
-
+Ace Yiming Zhang Version
 ****************************************************************************/
 
 /***************************************************************************
@@ -66,7 +66,7 @@ void setup()
    Run-time forever loop.
 ****************************************************************************/
  
-void myloop(){
+void loop(){
 
   int Decimal;
   byte Temperature_H, Temperature_L, counter, counter2;
@@ -98,11 +98,11 @@ void myloop(){
   Wire.write(val);
   Wire.endTransmission();
 
-  setc = "c";
-  setf = "f";
-  sets = "s";
+  String setc = "c";
+  String setf = "f";
+  String sets = "s";
 
-  a = Serial.readString();          // read the incoming data as string
+  String a = Serial.readString();          // read the incoming data as string
   
   while(1) {
     Wire.requestFrom(THERM, 2);
@@ -307,101 +307,6 @@ void SerialMonitorPrint (byte Temperature_H, int Decimal, bool IsPositive)
     
 
 /***************************************************************************
- Function Name: myloop
-
- Purpose: 
-   Run-time forever loop.
-****************************************************************************/
- void myloop(){
-
-  int Decimal;
-  byte Temperature_H, Temperature_L, counter, counter2;
-  bool IsPositive;
-  
-  /* Configure 7-Segment to 12mA segment output current, Dynamic mode, 
-     and Digits 1, 2, 3 AND 4 are NOT blanked */
-     
-  Wire.beginTransmission(_7SEG);   
-  byte val = 0; 
-  Wire.write(val);
-  val = B01000111;
-  Wire.write(val);
-  Wire.endTransmission();
-  
-  /* Setup configuration register 12-bit */
-     
-  Wire.beginTransmission(THERM);  
-  val = 1;  
-  Wire.write(val);
-  val = B01100000;
-  Wire.write(val);
-  Wire.endTransmission();
-  
-  /* Setup Digital THERMometer pointer register to 0 */
-     
-  Wire.beginTransmission(THERM); 
-  val = 0;  
-  Wire.write(val);
-  Wire.endTransmission();
-
-  setc = "c";
-  setf = "f";
-  sets = "s";
-  
-  while(Serial.available()) {
-    Wire.requestFrom(THERM, 2);
-    Temperature_H = Wire.read();
-    Temperature_L = Wire.read();
-    a = Serial.readString();          // read the incoming data as string
-
-    if ( a == setc){
-      Cal_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
-    
-      /* Display temperature on the serial monitor. 
-       Comment out this line if you don't use serial monitor.*/
-      SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
-    
-      /* Update RGB LED.*/
-      UpdateRGB (Temperature_H);
-    
-      /* Display temperature on the 7-Segment */
-      Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive);
-    
-      delay (1000);        /* Take temperature read every 1 second */
-    }
-
-    else if (a == setf){
-      Fah_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
-    
-      /* Display temperature on the serial monitor. 
-       Comment out this line if you don't use serial monitor.*/
-      SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
-    
-      /* Update RGB LED.*/
-      UpdateRGB (Temperature_H);
-    
-      /* Display temperature on the 7-Segment */
-      Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive);
-    
-      delay (1000);        /* Take temperature read every 1 second */
-    }
-
-    else if (a == sets){
-      Fah_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
-    
-      /* Display temperature on the serial monitor. 
-       Comment out this line if you don't use serial monitor.*/
-      SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
-    
-      /* Update RGB LED.*/
-      UpdateRGB (Temperature_H);
-    
-      delay (1000);        /* Take temperature read every 1 second */
-    }
-  }
-}
-
-/***************************************************************************
  Function Name: Fah_temp
 
  Purpose: 
@@ -419,7 +324,7 @@ void Fah_temp (int& Decimal, byte& High, byte& Low, bool& sign)
   Low = Low >> 4; 
   Decimal = Low;
   Decimal = Decimal * 625;      /* Each bit = 0.0625 degree C */
-  Decimal = Decimal *1.8 + 32   //converting to Fahrenheit
+  Decimal = Decimal *1.8 + 32;   //converting to Fahrenheit
   
   if (sign == 0)                /* if temperature is negative */
   {
