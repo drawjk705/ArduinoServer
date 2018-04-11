@@ -66,8 +66,8 @@ void setup()
    Run-time forever loop.
 ****************************************************************************/
  
-void loop() 
-{ 
+void myloop(){
+
   int Decimal;
   byte Temperature_H, Temperature_L, counter, counter2;
   bool IsPositive;
@@ -97,42 +97,64 @@ void loop()
   val = 0;  
   Wire.write(val);
   Wire.endTransmission();
+
+  setc = "c";
+  setf = "f";
+  sets = "s";
+
+  a = Serial.readString();          // read the incoming data as string
   
-  /* Test 7-Segment */
-  for (counter=0; counter<8; counter++)
-  {
-    Wire.beginTransmission(_7SEG);
-    Wire.write(1);
-    for (counter2=0; counter2<4; counter2++)
-    {
-      Wire.write(1<<counter);
-    }
-    Wire.endTransmission();
-    delay (250);
-  }
-  
-  while (1)
-  {
+  while(1) {
     Wire.requestFrom(THERM, 2);
     Temperature_H = Wire.read();
     Temperature_L = Wire.read();
     
-    /* Calculate temperature */
-    Cal_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
+    if ( a == setc){
+      Cal_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
     
-    /* Display temperature on the serial monitor. 
+      /* Display temperature on the serial monitor. 
        Comment out this line if you don't use serial monitor.*/
-    SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
+      SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
     
-    /* Update RGB LED.*/
-    UpdateRGB (Temperature_H);
+      /* Update RGB LED.*/
+      UpdateRGB (Temperature_H);
     
-    /* Display temperature on the 7-Segment */
-    Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive);
+      /* Display temperature on the 7-Segment */
+      Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive);
     
-    delay (1000);        /* Take temperature read every 1 second */
+      delay (1000);        /* Take temperature read every 1 second */
+    }
+
+    else if (a == setf){
+      Fah_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
+    
+      /* Display temperature on the serial monitor. 
+       Comment out this line if you don't use serial monitor.*/
+      SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
+    
+      /* Update RGB LED.*/
+      UpdateRGB (Temperature_H);
+    
+      /* Display temperature on the 7-Segment */
+      Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive);
+    
+      delay (1000);        /* Take temperature read every 1 second */
+    }
+
+    else if (a == sets){
+      Fah_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
+    
+      /* Display temperature on the serial monitor. 
+       Comment out this line if you don't use serial monitor.*/
+      SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
+    
+      /* Update RGB LED.*/
+      UpdateRGB (Temperature_H);
+    
+      delay (1000);        /* Take temperature read every 1 second */
+    }
   }
-} 
+}
 
 /***************************************************************************
  Function Name: Cal_temp
