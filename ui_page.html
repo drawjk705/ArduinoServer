@@ -4,78 +4,104 @@
 <head>
     <link rel="stylesheet" type="text/css" href="ui_page.css">
     <title>Our page</title>
+
+<style>
+body {
+    background-color: powderblue;
+}
+
+h1 {
+    font-size: 40px;
+    color: navy;
+}
+
+h2 {
+    font-size: 30px;
+    color: blue;
+    
+}
+
+p {
+    font-size: 20px;
+    color: purple;
+}
+
+button {
+    background-color: coral; 
+    border: 1px solid red;
+    font color: navy; /* White text */
+    font size: 20px;
+    font-weight: bold;
+    padding: 10px 24px; /* Some padding */
+    cursor: pointer; /* Pointer/hand icon */
+    width: 30%; /* Set a width if needed */
+    display: block; /* Make the buttons appear below each other */
+}
+
+button:not(:last-child) {
+    border-right: none; /* Prevent double borders */
+}
+
+/* Add a background color on hover */
+button:hover {
+    background-color: #3e8e41;
+}
+
+</style>
+
+<script>
+$(function(){ //display temperature in the right format 
+    $(".tempButton").click(function(){ 
+        var temp = $(this).val();
+        console.log('Value is' + temp);
+        if (temp == "F") {
+            $("#display1").val(temp);
+        }
+        if (temp =="C") {
+            $("#display1").val(temp);
+        }
+    });
+
+    $(".colorButton").click(function(){ 
+        var myColor = $(this).val();
+        console.log('Value is' + myColor);
+        //$.post(myColor);
+    });
+
+});
+</script>
+
 </head>
 <body>
-
-    <p class="top">Welcome to our page</p>
-    <!-- Table with interactive options -->
-    <table>
-        <!-- Headers -->
-        <thead>
-            <tr>
-                <!-- Light Interactions -->
-                <th>
-                    Select Light                    
-                </th>
-                <!-- Temperature Interactions -->
-                <th>
-                    Select Tempetature Type
-                </th>
-                <!-- Something else -->
-                <th>
-                    Something else
-                </th>
-            </tr>
-        </thead>
-        <!-- Body for selction options -->
-        <tbody>
-            <tr>
-                <td>
-                    <form method="post">
-                        <input type="radio" name="red"> Red <br>
-                        <input type="radio" name="blue"> Blue <br>
-                        <input type="radio" name="green"> Green <br>
-                        <input type="submit" name="submit">
-                    </form>
-                </td>
-            </tr>
-        </tbody>
-        <!-- Single buttons -->
-        <tfoot>
-            <tr>
-                <td>
-                    Enter standby
-                </td>
-            </tr>
-        </tfoot>
-
-
-
-
-
-    </table>
-
-
-    <p id="special">
-        <!-- working on displaying more and more text -->
-        <script>
-            var interval = setInterval(sayHello, 1000);
-            var text = document.getElementById("special");
-            
-            // when press a key, will 'reset' the page
-            document.addEventListener('keydown', function() {
-                console.log('pressed')
-                text.innerHTML = '';
-            });
-
-            function sayHello() {
-                text.innerHTML += 'hello<br>';
-                console.log('hello');
-            }
-        </script>        
-    </p>
-
     
+    <h1>Welcome to Our Project</h1>
+    
+
+    <h2>Display temperature in Celsius or Fahrenheit</h2>
+    <div class="button-group1" style="width:100%">
+    <button class = "tempButton" id="buttonC" value = "C">C</button>
+    <button class = "tempButton" id="buttonF" value = "F">F</button>
+    </div>
+    <input id="display1" name="display1">temperature here</input>    
+
+
+    <h2>Change color of Arduino light</h2>
+    <div class="button-group2" style="width:100%">
+    <button class = "colorButton" id="color_red" value = "r">red</button>
+    <button class = "colorButton" id="color_blue" value = "b">blue</button>
+    <button class = "colorButton" id="color_green" value ="g">green</button>
+    </div>
+    <p id="display2">Check Arduino to see the light change!</p>
+
+
+    <h2>Change display of Arduino text</h2>
+    <div class="button-group3" style="width:100%">
+    <button id="L">LLLL</button>
+    <button id="H">HHHH</button>
+    </div>
+    <p id="display3">Check Arduino to see the display!</p>
+
+    <button id = "sleep" type="button">Sleep Mode</button>
 
 </body>
 </html>
