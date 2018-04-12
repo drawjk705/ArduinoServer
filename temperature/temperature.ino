@@ -110,9 +110,39 @@ void loop()
     Wire.endTransmission();
     delay (250);
   }
+
+  int incomingByte = 0;
   
   while (1)
   {
+    while (1) {
+      if (Serial.available() > 0) {
+          // read the incoming byte:
+          int incomingByte = Serial.read();
+          break;
+      } else {
+        break;
+      }
+    }
+    if (incomingByte == 'r') {
+      digitalWrite(RED, HIGH);
+      digitalWrite(GREEN, LOW);
+      digitalWrite(BLUE, LOW);
+    }
+    if (incomingByte == 'g') {
+      digitalWrite(RED, LOW);
+      digitalWrite(GREEN, HIGH);
+      digitalWrite(BLUE, LOW);
+    }
+    if (incomingByte == 'b') {
+      digitalWrite(RED, LOW);
+      digitalWrite(GREEN, LOW);
+      digitalWrite(BLUE, HIGH);
+    }
+    
+
+
+    
     Wire.requestFrom(THERM, 2);
     Temperature_H = Wire.read();
     Temperature_L = Wire.read();
@@ -125,7 +155,7 @@ void loop()
     SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
     
     /* Update RGB LED.*/
-    UpdateRGB (Temperature_H);
+    //UpdateRGB (Temperature_H);
     
     /* Display temperature on the 7-Segment */
     Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive);

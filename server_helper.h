@@ -18,6 +18,7 @@ struct Packet
 {
     struct sockaddr_in client_addr;
     int fd;
+    int ard_fd;
     linkedlist** l;
     char* filename;
     char* quit_ptr;
@@ -30,6 +31,8 @@ int is_get(char* request);
 char* get_path(char* request);
 
 char* get_post(char* request);
+
+char* parse_post(char* post);
 
 char* read_html_file(char* filename);
 

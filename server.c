@@ -69,18 +69,18 @@ int start_server(int PORT_NUMBER)
       int sin_size = sizeof(struct sockaddr_in);
 
       linkedlist* l = malloc(sizeof(linkedlist));
-      char* filename = "/dev/ttyACM0";
+      char* filename = "/dev/ttyACM1";
 
       quit = '\0';
 
-      packet* p = get_started(filename);
-      p->l = &l;
-      p->filename = filename;
-      p->quit_ptr = &quit;
+      packet* pack0 = get_started(filename);
+      pack0->l = &l;
+      pack0->filename = filename;
+      pack0->quit_ptr = &quit;
 
       pthread_t t0;
 
-      pthread_create(&t0, NULL, &get_temps, p);
+      pthread_create(&t0, NULL, &get_temps, pack0);
 
       // keep on accepting requests as long has haven't received command to close server
       while (quit != 'q') {
@@ -88,7 +88,7 @@ int start_server(int PORT_NUMBER)
         pthread_t close;
 
         // create close_server thread
-        pthread_create(&close, NULL, &close_server, NULL);
+        pthread_create(&close, NULL, &close_server, pack0);
 
         // to get return value from select()
         int sret;
@@ -130,6 +130,7 @@ int start_server(int PORT_NUMBER)
             }
             p->client_addr = client_addr;
             p->fd = fd;
+            p->ard_fd = pack0->ard_fd;
             pthread_t req;
             // create request thread
             pthread_create(&req, NULL, &handle_connection, p);
@@ -159,6 +160,8 @@ int start_server(int PORT_NUMBER)
  * @param p [description]
  */
 void* close_server(void* p) {
+
+    packet* pack = (packet*) p;
 
     // intialize quit
     quit = '\0';
@@ -200,6 +203,7 @@ void* handle_connection(void* p) {
     packet* pack = (packet*) p;
     struct sockaddr_in client_addr = pack->client_addr;
     int fd = pack->fd;
+    int ard_fd = pack->ard_fd;
 
     printf("Server got a connection from (%s, %d)\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
@@ -242,6 +246,10 @@ void* handle_connection(void* p) {
     send(fd, reply, strlen(reply), 0);
     if (is_get(request) == 1) {
       get_post(request);
+    } else {
+      // char* post = get_post(request);
+      // char c = *parse_post(post);
+      // write_to_arduino(ard_fd, c);
     }
     
     free(reply);

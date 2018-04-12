@@ -61,9 +61,9 @@ void* get_started(void* p) {
 
   // try to open the file for reading and writing
   // you may need to change the flags depending on your platform
-  int fd = open(file_name, O_RDWR | O_NOCTTY | O_NDELAY);
+  int ard_fd = open(file_name, O_RDWR | O_NOCTTY | O_NDELAY);
   
-  if (fd < 0) {
+  if (ard_fd < 0) {
     perror("Could not open file\n");
     exit(1);
   }
@@ -71,10 +71,10 @@ void* get_started(void* p) {
     printf("Successfully opened %s for reading and writing\n", file_name);
   }
 
-  configure(fd);
+  configure(ard_fd);
 
   // add fd to pack
-  pack->fd = fd;
+  pack->ard_fd = ard_fd;
 
   return pack;
 }
@@ -86,17 +86,17 @@ void* get_temps(void* p) {
   // unpack packet
   linkedlist** l = pack->l;
   char* file_name = pack->filename;
-  int fd = pack->fd;
+  int ard_fd = pack->ard_fd;
   char* quit = pack->quit_ptr;
 
   // do a few times to get rid of garbage
   for (int i = 0; i < 10; i++) {
-    read_temp(file_name, fd);
+    read_temp(file_name, ard_fd);
   }
   // int i = 100;
   while (*quit != 'q') {
     // sleep(10);
-    float* f = read_temp(file_name, fd);
+    float* f = read_temp(file_name, ard_fd);
     
     // add temperature to linked list,
     // to display most recent temperatures
@@ -195,8 +195,8 @@ float* strip_letters(char* str) {
   return f;
 }
 
-void write_to_arduino(int fd, char* str) {
-  if (write(fd, str, strlen(str)) != strlen(str)) {
+void write_to_arduino(int fd, char c) {
+  if (write(fd, &c, sizeof(char)) != sizeof(char)) {
     perror("Could not write to Arduino");
     exit(1);
   }

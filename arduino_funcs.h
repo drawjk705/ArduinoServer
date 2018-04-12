@@ -31,4 +31,4 @@ float* strip_letters(char* str);
 
 void write_temp_to_file(float* temp);
 
-void write_to_arduino(int fd, char* str);
+void write_to_arduino(int fd, char c);

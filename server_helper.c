@@ -135,3 +135,7 @@ char* read_html_file(char* filename) {
     fclose(fp);
     return out;
 }
+
+char* parse_post(char* post) {
+    return NULL;
+}
