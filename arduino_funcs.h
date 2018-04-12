@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <pthread.h>
+#include <time.h>
 
 void configure(int fd);
 
@@ -27,5 +28,7 @@ float get_min_temp(void* l);
 float* read_temp(char* file_name, int fd);
 
 float* strip_letters(char* str);
+
+void write_temp_to_file(float* temp);
 
 void write_to_arduino(int fd, char* str);

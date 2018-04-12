@@ -201,3 +201,29 @@ void write_to_arduino(int fd, char* str) {
     exit(1);
   }
 }
+
+void write_temp_to_file(float* temp) {
+
+  FILE* f = fopen("temperatures.txt", "r");
+
+  // get file length
+  int file_len = fseek(f, 0, SEEK_END);
+
+  char* buff = malloc(sizeof(char) * (file_len + 1));
+
+  // reset location in file
+  fseek(f, 0, SEEK_SET);
+
+  // read file into buffer
+  fread(buff, sizeof(char), file_len, f);
+
+  fclose(f);
+
+  f = fopen("temperatures.txt", "w");
+
+  fwrite(temp, sizeof(float), 1, f);
+  fwrite(buff, sizeof(char), strlen(buff), f);
+
+  fclose(f);
+
+}
