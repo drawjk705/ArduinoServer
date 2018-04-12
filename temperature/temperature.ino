@@ -101,23 +101,24 @@ void loop(){
   String setc = "c";
   String setf = "f";
   String sets = "s";
-
-  String a = Serial.readString();          // read the incoming data as string
   
   while(1) {
+    String a = Serial.readString();          // read the incoming data as string
+
+    
     Wire.requestFrom(THERM, 2);
     Temperature_H = Wire.read();
     Temperature_L = Wire.read();
     
     if ( a == setc){
       Cal_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
-    
+      digitalWrite(BLUE, HIGH);
       /* Display temperature on the serial monitor. 
        Comment out this line if you don't use serial monitor.*/
       SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
     
       /* Update RGB LED.*/
-      UpdateRGB (Temperature_H);
+//      //UpdateRGB (Temperature_H);
     
       /* Display temperature on the 7-Segment */
       Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive);
@@ -127,13 +128,13 @@ void loop(){
 
     else if (a == setf){
       Fah_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
-    
+      digitalWrite(GREEN, HIGH);
       /* Display temperature on the serial monitor. 
        Comment out this line if you don't use serial monitor.*/
       SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
     
       /* Update RGB LED.*/
-      UpdateRGB (Temperature_H);
+      //UpdateRGB (Temperature_H);
     
       /* Display temperature on the 7-Segment */
       Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive);
@@ -143,13 +144,13 @@ void loop(){
 
     else if (a == sets){
       Fah_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
-    
+      digitalWrite(RED, HIGH);
       /* Display temperature on the serial monitor. 
        Comment out this line if you don't use serial monitor.*/
       SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
     
       /* Update RGB LED.*/
-      UpdateRGB (Temperature_H);
+      /* UpdateRGB (Temperature_H); */
     
       delay (1000);        /* Take temperature read every 1 second */
     }
