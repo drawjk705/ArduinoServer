@@ -51,7 +51,7 @@ void configure(int fd) {
  * function to get temperature from Arduino
  * @param p pointer to filename
  */
-void* get_started(void* p) {
+int get_started(void* p) {
 
   // unpack packet
   packet* pack = malloc(sizeof(packet));
@@ -73,10 +73,7 @@ void* get_started(void* p) {
 
   configure(ard_fd);
 
-  // add fd to pack
-  pack->ard_fd = ard_fd;
-
-  return pack;
+  return ard_fd;
 }
 
 void* get_temps(void* p) {
@@ -200,6 +197,7 @@ void write_to_arduino(int fd, char c) {
     perror("Could not write to Arduino");
     exit(1);
   }
+  printf("writing %c to Arduino\n", c);
 }
 
 void write_temp_to_file(float* temp) {

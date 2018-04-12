@@ -32,7 +32,7 @@ char* get_path(char* request);
 
 char* get_post(char* request);
 
-char* parse_post(char* post);
+char parse_post(char* post);
 
 char* read_html_file(char* filename);
 

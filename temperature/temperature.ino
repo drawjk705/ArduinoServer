@@ -118,26 +118,37 @@ void loop()
     while (1) {
       if (Serial.available() > 0) {
           // read the incoming byte:
-          int incomingByte = Serial.read();
+          incomingByte = Serial.read();
           break;
       } else {
+        incomingByte = '\0';
         break;
       }
     }
     if (incomingByte == 'r') {
+      Serial.println("RED"); 
       digitalWrite(RED, HIGH);
-      digitalWrite(GREEN, LOW);
       digitalWrite(BLUE, LOW);
+      incomingByte = '\0';
     }
-    if (incomingByte == 'g') {
+    else if (incomingByte == 'g') {
+      Serial.println("GREEN");
       digitalWrite(RED, LOW);
       digitalWrite(GREEN, HIGH);
       digitalWrite(BLUE, LOW);
+      incomingByte = '\0';
     }
-    if (incomingByte == 'b') {
-      digitalWrite(RED, LOW);
-      digitalWrite(GREEN, LOW);
-      digitalWrite(BLUE, HIGH);
+    else if (incomingByte == 'b') {
+      Serial.println("BLUE");
+       digitalWrite(RED, LOW);
+       digitalWrite(GREEN, LOW);
+       digitalWrite(BLUE, HIGH);
+      incomingByte = '\0';
+    } else {
+      Serial.println("nothing");
+       digitalWrite(RED, LOW);
+       digitalWrite(GREEN, LOW);
+       digitalWrite(BLUE, LOW);
     }
     
 
@@ -275,22 +286,22 @@ void Send7SEG (byte Digit, byte Number)
 
 void UpdateRGB (byte Temperature_H)
 {
-  digitalWrite(RED, LOW);
-  digitalWrite(GREEN, LOW);
-  digitalWrite(BLUE, LOW);        /* Turn off all LEDs. */
-  
-  if (Temperature_H <= COLD)
-  {
-    digitalWrite(BLUE, HIGH);
-  }
-  else if (Temperature_H >= HOT)
-  {
-    digitalWrite(RED, HIGH);
-  }
-  else 
-  {
-    digitalWrite(GREEN, HIGH);
-  }
+//  digitalWrite(RED, LOW);
+//  digitalWrite(GREEN, LOW);
+//  digitalWrite(BLUE, LOW);        /* Turn off all LEDs. */
+//  
+//  if (Temperature_H <= COLD)
+//  {
+//    digitalWrite(BLUE, HIGH);
+//  }
+//  else if (Temperature_H >= HOT)
+//  {
+//    digitalWrite(RED, HIGH);
+//  }
+//  else 
+//  {
+//    digitalWrite(GREEN, HIGH);
+//  }
 }
 
 /***************************************************************************

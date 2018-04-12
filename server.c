@@ -69,26 +69,31 @@ int start_server(int PORT_NUMBER)
       int sin_size = sizeof(struct sockaddr_in);
 
       linkedlist* l = malloc(sizeof(linkedlist));
-      char* filename = "/dev/ttyACM1";
+      char* filename = "/dev/ttyACM0";
+      // char* filename = "/dev/ttyACM1";
 
       quit = '\0';
 
-      packet* pack0 = get_started(filename);
+      int ard_fd = get_started(filename);
+      write_to_arduino(ard_fd, '\0');
+      packet* pack0 = malloc(sizeof(packet));
       pack0->l = &l;
       pack0->filename = filename;
+      pack0->ard_fd = ard_fd;
       pack0->quit_ptr = &quit;
 
       pthread_t t0;
 
       pthread_create(&t0, NULL, &get_temps, pack0);
 
-      // keep on accepting requests as long has haven't received command to close server
+      // keep on accepting requests as long as
+      // haven't received command to close server
       while (quit != 'q') {
 
         pthread_t close;
 
         // create close_server thread
-        pthread_create(&close, NULL, &close_server, pack0);
+        pthread_create(&close, NULL, &close_server, NULL);
 
         // to get return value from select()
         int sret;
@@ -124,33 +129,32 @@ int start_server(int PORT_NUMBER)
           if (fd != -1) {
 
             // create packet ptr with necessary data for request thread
-            packet* p = malloc(sizeof(packet));
-            if (p == NULL) {
-                return -1;
-            }
-            p->client_addr = client_addr;
-            p->fd = fd;
-            p->ard_fd = pack0->ard_fd;
+            // packet* p = malloc(sizeof(packet));
+            // if (p == NULL) {
+            //     return -1;
+            // }
+            pack0->client_addr = client_addr;
+            pack0->fd = fd;
             pthread_t req;
             // create request thread
-            pthread_create(&req, NULL, &handle_connection, p);
+            pthread_create(&req, NULL, &handle_connection, pack0);
             
             // join
             pthread_join(req, NULL);
 
             // free p
-            free(p);
+            // free(p);
         }
       }
       pthread_join(close, NULL);
     }
     pthread_join(t0, NULL);
 
-      // 8. close: close the socket
-      close(sock);
-      printf("Server shutting down\n");
-  
-      return 0;
+    // 8. close: close the socket
+    close(sock);
+    printf("Server shutting down\n");
+
+    return 0;
 }
 
 
@@ -160,8 +164,6 @@ int start_server(int PORT_NUMBER)
  * @param p [description]
  */
 void* close_server(void* p) {
-
-    packet* pack = (packet*) p;
 
     // intialize quit
     quit = '\0';
@@ -245,11 +247,21 @@ void* handle_connection(void* p) {
     // note that the second argument is a char*, and the third is the number of chars   
     send(fd, reply, strlen(reply), 0);
     if (is_get(request) == 1) {
-      get_post(request);
-    } else {
-      // char* post = get_post(request);
-      // char c = *parse_post(post);
-      // write_to_arduino(ard_fd, c);
+      char* post = get_post(request);
+      char c = parse_post(post);
+      printf("\n\n%c\n\n\n", c);
+      if (c == 'r') {
+        printf("Making it red\n");
+        write_to_arduino(ard_fd, 'r');
+      } 
+      if (c == 'g') {
+        printf("making it green\n");
+        write_to_arduino(ard_fd, 'g');
+      }
+      if (c == 'b') {
+        printf("making it blue\n");
+        write_to_arduino(ard_fd, 'b');
+      }
     }
     
     free(reply);

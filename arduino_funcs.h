@@ -15,7 +15,7 @@
 
 void configure(int fd);
 
-void* get_started(void* p);
+int get_started(void* p);
 
 void* get_temps(void* p);
 

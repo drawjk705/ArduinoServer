@@ -136,6 +136,22 @@ char* read_html_file(char* filename) {
     return out;
 }
 
-char* parse_post(char* post) {
-    return NULL;
+char parse_post(char* post) {
+    char buf[10];
+
+    for (int i = 0; i < strlen(post); i++) {
+        
+        buf[i] = post[i];
+        if (post[i + 1] == '=') {
+            buf[i + 1] = '\0';
+            break;
+        }
+    }
+    
+    if (strcmp(buf, "red") == 0)    return 'r';
+    if (strcmp(buf, "green") == 0)  return 'g';
+    if (strcmp(buf, "blue") == 0)   return 'b';
+
+
+    return '\0';
 }
