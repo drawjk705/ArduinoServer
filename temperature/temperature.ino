@@ -115,37 +115,37 @@ void loop()
   
   while (1)
   {
-    while (1) {
+//    while (1) {/
       if (Serial.available() > 0) {
           // read the incoming byte:
           incomingByte = Serial.read();
-          break;
+//          break;/
       } else {
         incomingByte = '\0';
-        break;
+//        break;/
       }
-    }
+//    }/
     if (incomingByte == 'r') {
-      Serial.println("RED"); 
+//      Serial.println(/"RED"); 
       digitalWrite(RED, HIGH);
       digitalWrite(BLUE, LOW);
       incomingByte = '\0';
     }
     else if (incomingByte == 'g') {
-      Serial.println("GREEN");
+//      Serial.print/ln("GREEN");
       digitalWrite(RED, LOW);
       digitalWrite(GREEN, HIGH);
       digitalWrite(BLUE, LOW);
       incomingByte = '\0';
     }
     else if (incomingByte == 'b') {
-      Serial.println("BLUE");
+//      Serial.pr/intln("BLUE");
        digitalWrite(RED, LOW);
        digitalWrite(GREEN, LOW);
        digitalWrite(BLUE, HIGH);
       incomingByte = '\0';
     } else {
-      Serial.println("nothing");
+//      Serial/.println("nothing");
        digitalWrite(RED, LOW);
        digitalWrite(GREEN, LOW);
        digitalWrite(BLUE, LOW);
