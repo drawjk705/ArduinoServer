@@ -109,6 +109,10 @@ int start_server(int PORT_NUMBER) {
     // haven't received command to close server
     while (quit != 'q') {
 
+      if (check_if_open(ard_fd) == -1) {
+        printf("Arduino has been disconnected\n");
+      }
+
       /***********************************/
           // create close_server thread //
           pthread_t close;

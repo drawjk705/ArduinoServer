@@ -15,7 +15,7 @@
 
 void configure(int fd);
 
-int fd_still_open(int fd);
+int check_if_open(int fd);
 
 int get_started(char* file_name);
 

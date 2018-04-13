@@ -3,7 +3,7 @@
 
 // flag to determine if arduino is open or not
 // for reading and writing
-int is_open;
+int is_open;    // -1 if not open, 0 if open
 
 /*
 This code configures the file descriptor for use as a serial port.
@@ -28,14 +28,14 @@ int get_started(char* file_name) {
   
   if (ard_fd < 0) {
     printf("Cannot open file\n");
-    is_open = 0;
+    is_open = -1;
     return -1;
     // perror("Could not open file\n");
     // exit(1);
   }
   else {
     printf("Successfully opened %s for reading and writing\n", file_name);
-    is_open = 1;
+    is_open = 0;
   }
 
   configure(ard_fd);
@@ -61,16 +61,23 @@ void* get_temps(void* p) {
   // rid of any potential garbage that's
   // being outputted
   for (int i = 0; i < 10; i++) {
-    read_temp(file_name, ard_fd);
+        read_temp(file_name, ard_fd);
   }
 
-  while (*quit != 'q' && is_open == 1) {
-
-    float* f = read_temp(file_name, ard_fd);
-    
-    free(f);
-    printf("completed readings\n");
-    sleep(2);
+  while (*quit != 'q') {
+    if (is_open == 0) {
+      float* f = read_temp(file_name, ard_fd);
+      free(f);
+      printf("completed readings\n");
+      sleep(2);
+    }
+    else {
+      printf("Arduino is not connected. Will try to connect\n");
+      get_started(file_name);
+      for (int i = 0; i < 10; i++) {
+        read_temp(file_name, ard_fd);
+      }
+    }
   }
 
   pthread_exit(NULL);
@@ -154,7 +161,7 @@ float* strip_letters(char* str) {
  * @param c  message to send
  */
 void write_to_arduino(int fd, char c) {
-  if (is_open == 0) {
+  if (is_open == -1) {
     printf("Arduino is not open for writing\n");
     return;
   }
@@ -198,10 +205,10 @@ void write_to_arduino(int fd, char c) {
  */
 int check_if_open(int fd) {
   if (fcntl(fd, F_GETFL) < 0 && errno == EBADF) {
-    is_open = 0;
+    is_open = -1;
     return -1;
   } else {
-    is_open = 1;
+    is_open = 0;
     return 0;
   }
 }
