@@ -1,40 +1,9 @@
 #include "arduino_funcs.h"
 #include "server_helper.h"
 
-float get_max_temp(void* l) {
-  float max = 0;
-  linkedlist* ll = (linkedlist*) l;
-  float** array = (float**) to_array(ll);
-  for (int i = 0; i < ll->size; i++) {
-    if (*(array[i]) > max) {
-      max = *(array[i]);
-    }
-  }
-  return max;
-}
-
-float get_min_temp(void* l) {
-  float min = 999;
-  linkedlist* ll = (linkedlist*) l;
-  float** array = (float**) to_array(ll);
-  for (int i = 0; i < ll->size; i++) {
-    if (*(array[i]) < min) {
-      min = *(array[i]);
-    }
-  } 
-  return min;
-}
-
-float get_avg_temp(void* l) {
-  float total = 0;
-  linkedlist* ll = (linkedlist*) l;
-  float** array = (float**) to_array(ll);
-  for (int i = 0; i < ll->size; i++) {
-    total += *(array[i]);
-  }
-  return total / (float) ll->size;
-}
-
+// flag to determine if arduino is open or not
+// for reading and writing
+int is_open;
 
 /*
 This code configures the file descriptor for use as a serial port.
@@ -48,27 +17,25 @@ void configure(int fd) {
 }
 
 /**
- * function to get temperature from Arduino
+ * function to get Arduino ready for reading
  * @param p pointer to filename
  */
-int get_started(void* p) {
-
-  // unpack packet
-  packet* pack = malloc(sizeof(packet));
-
-  
-  char* file_name = (char*) p;
+int get_started(char* file_name) {
 
   // try to open the file for reading and writing
   // you may need to change the flags depending on your platform
   int ard_fd = open(file_name, O_RDWR | O_NOCTTY | O_NDELAY);
   
   if (ard_fd < 0) {
-    perror("Could not open file\n");
-    exit(1);
+    printf("Cannot open file\n");
+    is_open = 0;
+    return -1;
+    // perror("Could not open file\n");
+    // exit(1);
   }
   else {
     printf("Successfully opened %s for reading and writing\n", file_name);
+    is_open = 1;
   }
 
   configure(ard_fd);
@@ -76,46 +43,35 @@ int get_started(void* p) {
   return ard_fd;
 }
 
+/**
+ * function to keep on getting the
+ * current temperature from the Arduino
+ * @param p packet with relevant data
+ */
 void* get_temps(void* p) {
 
   packet* pack = (packet*) p;
 
   // unpack packet
-  linkedlist** l = pack->l;
   char* file_name = pack->filename;
   int ard_fd = pack->ard_fd;
   char* quit = pack->quit_ptr;
 
-  // do a few times to get rid of garbage
+  // read through a few times to get
+  // rid of any potential garbage that's
+  // being outputted
   for (int i = 0; i < 10; i++) {
     read_temp(file_name, ard_fd);
   }
-  // int i = 100;
-  while (*quit != 'q') {
-    // sleep(10);
+
+  while (*quit != 'q' && is_open == 1) {
+
     float* f = read_temp(file_name, ard_fd);
     
-    // add temperature to linked list,
-    // to display most recent temperatures
-    add_to_tail(f, *l);
-
-    // remove the least recently added
-    // temperature if size exceeds 100
-    // if ((*l)->size > 100) {
-    //   remove_from_front(*l);
-    // }
-    
-    ////////////////////////
-    // write to HTML file //
-    ////////////////////////
-
     free(f);
     printf("completed readings\n");
     sleep(2);
-    // printf("%d\n", i--);
   }
-
-
 
   pthread_exit(NULL);
 }
@@ -127,21 +83,16 @@ void* get_temps(void* p) {
  * @return           the temperature as a float, without any surrounding text
  */
 float* read_temp(char* file_name, int fd) {
-  /*
-    Write the rest of the program below, using the read and write system calls.
-  */
   
-  char out[100];
+  char out[100]; // what output will be
+  int index = 0; // index to keep track of location in out[]
 
-  int index = 0;
+  char buf[100]; // buffer to read in data
 
-  char buf[100];
-
-  int end = 0;
+  int end = 0;   // flag to determin if are at end of message
 
   while (end == 0) {
       int bytes_read = read(fd, buf, 100);
-
       for (int i = 0; i < bytes_read; i++) {
           out[index++] = buf[i];
           if (buf[i] == '\n') {
@@ -159,6 +110,11 @@ float* read_temp(char* file_name, int fd) {
 
 }
 
+/**
+ * strip letters from the Arduino message
+ * @param  str the Arduino message
+ * @return     solely the temperature (as a float)
+ */
 float* strip_letters(char* str) {
 
   float* f = malloc(sizeof(float));
@@ -168,7 +124,7 @@ float* strip_letters(char* str) {
 
   for (int i = 0; i < strlen(str); i++) {
     // anything that's a number or decimal
-    if ((str[i] >= 49 && str[i] <= 57) || str[i] == 46) {
+    if ((str[i] >= '0' && str[i] <= '9') || str[i] == '.') {
       if (start == 0) {
         start = i;
       }
@@ -181,7 +137,7 @@ float* strip_letters(char* str) {
     end = strlen(str) - 1;
   }
 
-  char out[end - start];
+  char out[end - start];    // create output char[]
 
   for (int i = 0; i < end - start; i++) {
     out[i] = str[i + start];
@@ -192,7 +148,16 @@ float* strip_letters(char* str) {
   return f;
 }
 
+/**
+ * send message to Arduino
+ * @param fd Arduino file descriptor
+ * @param c  message to send
+ */
 void write_to_arduino(int fd, char c) {
+  if (is_open == 0) {
+    printf("Arduino is not open for writing\n");
+    return;
+  }
   if (write(fd, &c, sizeof(char)) != sizeof(char)) {
     perror("Could not write to Arduino");
     exit(1);
@@ -200,28 +165,43 @@ void write_to_arduino(int fd, char c) {
   printf("writing %c to Arduino\n", c);
 }
 
-void write_temp_to_file(float* temp) {
+// void write_temp_to_file(float* temp) {
 
-  FILE* f = fopen("temperatures.txt", "r");
+//   FILE* f = fopen("temperatures.txt", "r");
 
-  // get file length
-  int file_len = fseek(f, 0, SEEK_END);
+//   // get file length
+//   int file_len = fseek(f, 0, SEEK_END);
 
-  char* buff = malloc(sizeof(char) * (file_len + 1));
+//   char* buff = malloc(sizeof(char) * (file_len + 1));
 
-  // reset location in file
-  fseek(f, 0, SEEK_SET);
+//   // reset location in file
+//   fseek(f, 0, SEEK_SET);
 
-  // read file into buffer
-  fread(buff, sizeof(char), file_len, f);
+//   // read file into buffer
+//   fread(buff, sizeof(char), file_len, f);
 
-  fclose(f);
+//   fclose(f);
 
-  f = fopen("temperatures.txt", "w");
+//   f = fopen("temperatures.txt", "w");
 
-  fwrite(temp, sizeof(float), 1, f);
-  fwrite(buff, sizeof(char), strlen(buff), f);
+//   fwrite(temp, sizeof(float), 1, f);
+//   fwrite(buff, sizeof(char), strlen(buff), f);
 
-  fclose(f);
+//   fclose(f);
 
+// }
+
+/**
+ * check if file descriptor is still open
+ * @param  fd file descriptor in question
+ * @return    -1 if no, 0 if yes
+ */
+int check_if_open(int fd) {
+  if (fcntl(fd, F_GETFL) < 0 && errno == EBADF) {
+    is_open = 0;
+    return -1;
+  } else {
+    is_open = 1;
+    return 0;
+  }
 }

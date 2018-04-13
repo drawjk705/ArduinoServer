@@ -24,131 +24,131 @@ void* say_hello(void* p) {
   pthread_exit(NULL);
 }
 
-int start_server(int PORT_NUMBER)
-{
-      // structs to represent the server and client
-      struct sockaddr_in server_addr, client_addr;    
+int start_server(int PORT_NUMBER) {
+  
+    /*************************************************************************/
+    /********************* Getting the server set up *************************/
+    /*************************************************************************/
+
+    // structs to represent the server and client
+    struct sockaddr_in server_addr, client_addr;    
       
-      int sock; // socket descriptor
+    int sock; // socket descriptor
 
-      // 1. socket: creates a socket descriptor that you later use to make other system calls
-      if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        perror("Socket");
-        exit(1);
-      }
-      int temp;
-      if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &temp, sizeof(int)) == -1) {
-        perror("Setsockopt");
-        exit(1);
-      }
-
-      // configure the server
-      server_addr.sin_port = htons(PORT_NUMBER); // specify port number
-      server_addr.sin_family = AF_INET;         
-      server_addr.sin_addr.s_addr = INADDR_ANY; 
-      bzero(&(server_addr.sin_zero), 8); 
-      
-      // 2. bind: use the socket and associate it with the port number
-      if (bind(sock, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1) {
-        perror("Unable to bind");
-        exit(1);
-      }
-
-      // 3. listen: indicates that we want to listen to the port to which we bound; second arg is number of allowed connections
-      if (listen(sock, 1) == -1) {
-        perror("Listen");
-        exit(1);
-      }
-          
-      // once you get here, the server is set up and about to start listening
-      printf("\nServer configured to listen on port %d\n", PORT_NUMBER);
-      fflush(stdout);
-     
-
-      // 4. accept: wait here until we get a connection on that port
-      int sin_size = sizeof(struct sockaddr_in);
-
-      linkedlist* l = malloc(sizeof(linkedlist));
-      char* filename = "/dev/ttyACM0";
-      // char* filename = "/dev/ttyACM1";
-
-      quit = '\0';
-
-      int ard_fd = get_started(filename);
-      write_to_arduino(ard_fd, '\0');
-      packet* pack0 = malloc(sizeof(packet));
-      pack0->l = &l;
-      pack0->filename = filename;
-      pack0->ard_fd = ard_fd;
-      pack0->quit_ptr = &quit;
-
-      pthread_t t0;
-
-      pthread_create(&t0, NULL, &get_temps, pack0);
-
-      // keep on accepting requests as long as
-      // haven't received command to close server
-      while (quit != 'q') {
-
-        pthread_t close;
-
-        // create close_server thread
-        pthread_create(&close, NULL, &close_server, NULL);
-
-        // to get return value from select()
-        int sret;
-
-        // bit array to represent fds
-        fd_set readfds;
-
-        // struct to determine how long
-        // to wait before timeout
-        struct timeval timeout;
-
-        // zero out bit array
-        FD_ZERO(&readfds);
-
-        // set bit array
-        FD_SET(sock, &readfds);
-
-        // set timeout time
-        timeout.tv_sec = 3;
-        timeout.tv_usec = 0;
-
-        // run the select
-        sret = select(8, &readfds, NULL, NULL, &timeout);
-
-        if (sret == 0) {
-          printf("SRET returned 0\n");
-        }
-
-
-        if (sret != 0) {
-          printf("SRET returned %d\n", sret);
-          int fd = accept(sock, (struct sockaddr *)&client_addr,(socklen_t *)&sin_size);
-          if (fd != -1) {
-
-            // create packet ptr with necessary data for request thread
-            // packet* p = malloc(sizeof(packet));
-            // if (p == NULL) {
-            //     return -1;
-            // }
-            pack0->client_addr = client_addr;
-            pack0->fd = fd;
-            pthread_t req;
-            // create request thread
-            pthread_create(&req, NULL, &handle_connection, pack0);
-            
-            // join
-            pthread_join(req, NULL);
-
-            // free p
-            // free(p);
-        }
-      }
-      pthread_join(close, NULL);
+    // 1. socket: creates a socket descriptor that you later use to make other system calls
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+      perror("Socket");
+      exit(1);
     }
-    pthread_join(t0, NULL);
+    int temp;
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &temp, sizeof(int)) == -1) {
+      perror("Setsockopt");
+      exit(1);
+    }
+
+    // configure the server
+    server_addr.sin_port = htons(PORT_NUMBER); // specify port number
+    server_addr.sin_family = AF_INET;         
+    server_addr.sin_addr.s_addr = INADDR_ANY; 
+    bzero(&(server_addr.sin_zero), 8); 
+    
+    // 2. bind: use the socket and associate it with the port number
+    if (bind(sock, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1) {
+      perror("Unable to bind");
+      exit(1);
+    }
+
+    // 3. listen: indicates that we want to listen to the port to which we bound; second arg is number of allowed connections
+    if (listen(sock, 1) == -1) {
+      perror("Listen");
+      exit(1);
+    }
+        
+    // once you get here, the server is set up and about to start listening
+    printf("\nServer configured to listen on port %d\n", PORT_NUMBER);
+    fflush(stdout);
+   
+
+    // 4. accept: wait here until we get a connection on that port
+    int sin_size = sizeof(struct sockaddr_in);
+
+    /*************************************************************************/
+    /*************************************************************************/
+
+    /*************************************************************************/
+    /***************** Open Arduino Connection to Server *********************/
+    /*************************************************************************/
+
+
+
+    // name of Serial Port
+    char* filename = "/dev/ttyACM0";
+    // char* filename = "/dev/ttyACM1";
+
+    // set quit flag to '\0'
+    quit = '\0';
+
+    // retrieve file descriptor from Arduino
+    int ard_fd = get_started(filename);
+
+    // write intial null char to Arduino to clear out
+    write_to_arduino(ard_fd, '\0');
+
+    // create a packet with relevant data
+
+    packet* pack0 = malloc(sizeof(packet));
+    pack0->filename = filename;
+    pack0->ard_fd = ard_fd;
+    pack0->quit_ptr = &quit;
+
+    pthread_t ard_t;
+
+    pthread_create(&ard_t, NULL, &get_temps, pack0);
+
+    // keep on accepting requests as long as
+    // haven't received command to close server
+    while (quit != 'q') {
+
+      /***********************************/
+          // create close_server thread //
+          pthread_t close;
+          pthread_create(&close, NULL, &close_server, NULL);
+
+      /***********************************/
+
+      /**************************************************/
+      /** set up select() for accept()ing HTML requests */
+      int sret;                     // to get return value from select()
+      fd_set readfds;               // bit array to represent fds
+      struct timeval timeout;       // struct to determine how long to wait before timeout
+      FD_ZERO(&readfds);            // zero out bit array
+      FD_SET(sock, &readfds);       // set bit array
+      timeout.tv_sec = 3;           // set timeout time
+      timeout.tv_usec = 0;
+      /**************************************************/
+
+      sret = select(8, &readfds, NULL, NULL, &timeout);     // run the select()
+
+      // if have received an HTTP request...
+      if (sret != 0) {
+        
+        // accept
+        int fd = accept(sock, (struct sockaddr *)&client_addr,(socklen_t *)&sin_size);
+        if (fd != -1) {
+
+          pack0->client_addr = client_addr; // add additional info to packet
+          pack0->fd = fd;
+          
+          pthread_t req;                    // create request thread
+          pthread_create(&req, NULL, &handle_connection, pack0);
+          
+          pthread_join(req, NULL);          // join request thread
+        }
+      }
+      pthread_join(close, NULL);            // join close thread
+    }
+
+    pthread_join(ard_t, NULL);              // join thread that handles Arduino behavior
 
     // 8. close: close the socket
     close(sock);
@@ -165,29 +165,23 @@ int start_server(int PORT_NUMBER)
  */
 void* close_server(void* p) {
 
-    // intialize quit
-    quit = '\0';
+    quit = '\0';        // intialize quit
 
-    // create file descriptor
-    int fd = 0;
-    // to get return value from select()
-    int sret;
+    /** preparing the select() for stdin */
 
-    // bit array to represent fds
-    fd_set readfds;
+    int fd = 0;             // create file descriptor
 
-    // struct to determine how long
-    // to wait before timeout
-    struct timeval timeout;
+    int sret;               // to get return value from select()
+    
+    fd_set readfds;         // bit array to represent fds
 
-    // zero out bit array
-    FD_ZERO(&readfds);
+    struct timeval timeout; // struct to determine how long to wait before timeout
 
-    // set bit array
-    FD_SET(fd, &readfds);
+    FD_ZERO(&readfds);      // zero out bit array
 
-    // set timeout time
-    timeout.tv_sec = 1;
+    FD_SET(fd, &readfds);   // set bit array
+
+    timeout.tv_sec = 1;     // set timeout time
     timeout.tv_usec = 0;
 
     // run the select
@@ -196,9 +190,15 @@ void* close_server(void* p) {
       printf("pressed q\n");
         quit = getchar();
     }
+
+    // exit
     pthread_exit(NULL);
 }
 
+/**
+ * handle connection when request comes in
+ * @param p packet containing relevant data
+ */
 void* handle_connection(void* p) {
 
     // unpack packet
@@ -221,7 +221,7 @@ void* handle_connection(void* p) {
 
     // this is the message that we'll send back
     char* reply = malloc(sizeof(char) * 100);
-    strcpy(reply, "HTTP/1.1 200 OK\nContent-Type: text/html\n\n");
+    strcpy(reply, "HTTP/1.1 200 OK\nContent-Type: text/html\n\n");      // <<<<<<< specify if is text/css or jscript
 
     // parse request
     char* req = get_path(request);
@@ -246,6 +246,8 @@ void* handle_connection(void* p) {
     // 6. send: send the outgoing message (response) over the socket
     // note that the second argument is a char*, and the third is the number of chars   
     send(fd, reply, strlen(reply), 0);
+    
+    // handle if it's a POST request
     if (is_get(request) == 1) {
       char* post = get_post(request);
       char c = parse_post(post);
@@ -289,6 +291,4 @@ int main(int argc, char *argv[]) {
   
 
   start_server(port_number);
-  // pthread_join(temp_thread, NULL);
-  // 
 }

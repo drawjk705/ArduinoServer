@@ -11,15 +11,16 @@
 #include <errno.h>
 #include <string.h>
 #include <pthread.h>
-#include "linkedlist.h"
 
+/**
+ * struct to transfer data b/w threads
+ */
 typedef struct Packet packet;
 struct Packet
 {
     struct sockaddr_in client_addr;
     int fd;
     int ard_fd;
-    linkedlist** l;
     char* filename;
     char* quit_ptr;
 };

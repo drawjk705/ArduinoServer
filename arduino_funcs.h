@@ -15,7 +15,9 @@
 
 void configure(int fd);
 
-int get_started(void* p);
+int fd_still_open(int fd);
+
+int get_started(char* file_name);
 
 void* get_temps(void* p);
 

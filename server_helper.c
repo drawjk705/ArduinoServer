@@ -14,7 +14,7 @@
 /**
  * parse HTTP request to see if it's a GET or POST
  * @param  request the HTTP request
- * @return         1 if GET, 2 if POST
+ * @return         0 if GET, 1 if POST
  */
 int is_get(char* request) {
     
@@ -67,8 +67,6 @@ char* get_post(char* request) {
     // return the value
     return tok;
 }
-
-
 
 /**
  * function to parse request portion of HTTP request,
@@ -136,6 +134,11 @@ char* read_html_file(char* filename) {
     return out;
 }
 
+/**
+ * parse a post request
+ * @param  post the request
+ * @return      char flag for what to do based on request
+ */
 char parse_post(char* post) {
     char buf[10];
 
