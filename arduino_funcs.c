@@ -50,6 +50,8 @@ int get_started(char* file_name) {
  */
 void* get_temps(void* p) {
 
+  printf("In gettemps\n");
+
   packet* pack = (packet*) p;
 
   // unpack packet
@@ -60,11 +62,14 @@ void* get_temps(void* p) {
   // read through a few times to get
   // rid of any potential garbage that's
   // being outputted
-  for (int i = 0; i < 10; i++) {
-        read_temp(file_name, ard_fd);
+  if (is_open == 0) {
+    for (int i = 0; i < 10; i++) {
+      read_temp(file_name, ard_fd);
+    }
   }
 
   while (*quit != 'q') {
+    printf("%c\n", *quit);
     if (is_open == 0) {
       float* f = read_temp(file_name, ard_fd);
       free(f);
@@ -74,8 +79,11 @@ void* get_temps(void* p) {
     else {
       printf("Arduino is not connected. Will try to connect\n");
       get_started(file_name);
-      for (int i = 0; i < 10; i++) {
-        read_temp(file_name, ard_fd);
+      sleep(10);
+      if (is_open == 0) {
+        for (int i = 0; i < 10; i++) {
+          read_temp(file_name, ard_fd);
+        }
       }
     }
   }
@@ -126,29 +134,23 @@ float* strip_letters(char* str) {
 
   float* f = malloc(sizeof(float));
 
-  int start = 0;
-  int end = 0;
+  char out[10];
+  int at_num = 0;
+  int index = 0;
 
   for (int i = 0; i < strlen(str); i++) {
     // anything that's a number or decimal
     if ((str[i] >= '0' && str[i] <= '9') || str[i] == '.') {
-      if (start == 0) {
-        start = i;
-      }
-    } else if (start != 0) {
-      end = i;
+        out[index++] = str[i];
+        at_num = 1;
+        if (index == 9) {
+          break;
+        }
+    } else if (at_num != 0) {
       break;
     }
   }
-  if (end == 0) {
-    end = strlen(str) - 1;
-  }
-
-  char out[end - start];    // create output char[]
-
-  for (int i = 0; i < end - start; i++) {
-    out[i] = str[i + start];
-  }
+  out[index] = '\0';      // null terminate
 
   *f = atof(out);
 
@@ -200,6 +202,8 @@ void write_to_arduino(int fd, char c) {
 
 /**
  * check if file descriptor is still open
+ * --> will be used by server to report on
+ *     arduino status
  * @param  fd file descriptor in question
  * @return    -1 if no, 0 if yes
  */

@@ -109,8 +109,11 @@ int start_server(int PORT_NUMBER) {
     // haven't received command to close server
     while (quit != 'q') {
 
+      // >>>>> // send appropriate messages to site <<<<<< //
       if (check_if_open(ard_fd) == -1) {
         printf("Arduino has been disconnected\n");
+      } else {
+        printf("Arduino is connected\n");
       }
 
       /***********************************/
