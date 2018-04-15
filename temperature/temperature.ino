@@ -37,11 +37,14 @@ const byte NumberLookup[16] =   {0x3F,0x06,0x5B,0x4F,0x66,
 
 /* Function prototypes */
 void Cal_temp (int&, byte&, byte&, bool&);
+void Fah_temp (int&, byte&, byte&, bool&);
 void Dis_7SEG (int, byte, byte, bool);
 void Send7SEG (byte, byte);
 void SerialMonitorPrint (byte, int, bool);
 void UpdateRGB (byte);
-
+void LOL();
+void SOS();
+void brak();
 /***************************************************************************
  Function Name: setup
 
@@ -66,8 +69,8 @@ void setup()
    Run-time forever loop.
 ****************************************************************************/
  
-void loop(){
-
+void loop() 
+{ 
   int Decimal;
   byte Temperature_H, Temperature_L, counter, counter2;
   bool IsPositive;
@@ -97,64 +100,103 @@ void loop(){
   val = 0;  
   Wire.write(val);
   Wire.endTransmission();
-
-  String setc = "c";
-  String setf = "f";
-  String sets = "s";
-
   
-  
-  while(1) {
-    Wire.requestFrom(THERM, 2);
-    Temperature_H = Wire.read();
-    Temperature_L = Wire.read();
-    String a = Serial.readString();          // read the incoming data as string
-    if ( a == setc){
-      Cal_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
-      digitalWrite(BLUE, HIGH);
-      /* Display temperature on the serial monitor. 
-       Comment out this line if you don't use serial monitor.*/
-      SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
-    
-      /* Update RGB LED.*/
-      //UpdateRGB (Temperature_H);
-    
-      /* Display temperature on the 7-Segment */
-      Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive);
-    
-      delay (1000);        /* Take temperature read every 1 second */
+  /* Test 7-Segment */
+  for (counter=0; counter<8; counter++)
+  {
+    Wire.beginTransmission(_7SEG);
+    Wire.write(1);
+    for (counter2=0; counter2<4; counter2++)
+    {
+      Wire.write(1<<counter);
     }
-
-    else if (a == setf){
-      Fah_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
-      digitalWrite(GREEN, HIGH);
-      /* Display temperature on the serial monitor. 
-       Comment out this line if you don't use serial monitor.*/
-      SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
-    
-      /* Update RGB LED.*/
-      //UpdateRGB (Temperature_H);
-    
-      /* Display temperature on the 7-Segment */
-      Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive);
-    
-      delay (1000);        /* Take temperature read every 1 second */
-    }
-
-    else{
-      Fah_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
-      digitalWrite(RED, HIGH);
-      /* Display temperature on the serial monitor. 
-       Comment out this line if you don't use serial monitor.*/
-      SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
-    
-      /* Update RGB LED.*/
-      //UpdateRGB (Temperature_H);
-    
-      delay (1000);        /* Take temperature read every 1 second */
-    }
+    Wire.endTransmission();
+    delay (250);
   }
-}
+
+  int incomingByte = 'f';
+  
+  while (1)
+  {
+//    while (1) {/
+      if (Serial.available() > 0) {
+          // read the incoming byte:
+          incomingByte = Serial.read();
+//          break;/
+      } else {
+        int exincomingByte = '\0';
+//        break;/
+      }
+//    }/
+    if (incomingByte == 'r') {
+//      Serial.println(/"RED"); 
+      digitalWrite(RED, HIGH);
+      digitalWrite(BLUE, LOW);
+      incomingByte = '\0';
+    }
+    else if (incomingByte == 'l'){
+      LOL();
+    }
+    else if (incomingByte == 's'){
+      SOS();
+    }
+    else if (incomingByte == 'k'){
+      brak();
+    }
+    else if (incomingByte == 'g') {
+//      Serial.print/ln("GREEN");
+      digitalWrite(RED, LOW);
+      digitalWrite(GREEN, HIGH);
+      digitalWrite(BLUE, LOW);
+      incomingByte = '\0';
+    }
+    else if (incomingByte == 'b') {
+//      Serial.pr/intln("BLUE");
+       digitalWrite(RED, LOW);
+       digitalWrite(GREEN, LOW);
+       digitalWrite(BLUE, HIGH);
+      incomingByte = '\0';
+    } 
+    else if (incomingByte == 'c'){
+      Wire.requestFrom(THERM, 2);
+      Temperature_H = Wire.read();
+      Temperature_L = Wire.read(); 
+      /* Calculate temperature */
+      Cal_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
+      /* Display temperature on the serial monitor. 
+       Comment out this line if you don't use serial monitor.*/
+      SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
+      /* Update RGB LED.*/
+      UpdateRGB (Temperature_H);
+      /* Display temperature on the 7-Segment */
+      Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive);
+      delay (1000);        /* Take temperature read every 1 second */
+    }
+    else if (incomingByte == 'f'){
+      Wire.requestFrom(THERM, 2);
+      Temperature_H = Wire.read();
+      Temperature_L = Wire.read();
+      Fah_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
+      SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
+      UpdateRGB (Temperature_H);
+      Dis_7SEG_Fah (Decimal, Temperature_H, Temperature_L, IsPositive);
+    }
+    else if (incomingByte == 'w'){
+      Wire.requestFrom(THERM, 2);
+      Temperature_H = Wire.read();
+      Temperature_L = Wire.read();
+      Cal_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
+      SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
+    }
+    else {
+//      Serial/.println("nothing");
+       digitalWrite(RED, LOW);
+       digitalWrite(GREEN, LOW);
+       digitalWrite(BLUE, LOW);
+    }
+ 
+  }
+} 
 
 /***************************************************************************
  Function Name: Cal_temp
@@ -183,6 +225,32 @@ void Cal_temp (int& Decimal, byte& High, byte& Low, bool& sign)
 }
 
 /***************************************************************************
+ Function Name: Fah_temp
+
+ Purpose: 
+   Calculate temperature from raw data.
+****************************************************************************/
+void Fah_temp (int& Decimal, byte& High, byte& Low, bool& sign)
+{
+  if ((High&B10000000)==0x80)    /* Check for negative temperature. */
+    sign = 0;
+  else
+    sign = 1;
+    
+  High = High & B01111111;      /* Remove sign bit */
+  Low = Low & B11110000;        /* Remove last 4 bits */
+  Low = Low >> 4; 
+  Decimal = Low;
+  Decimal = Decimal * 625 * 9 / 5 + 32;      /* Each bit = 0.0625 degree C */
+  
+  if (sign == 0)                /* if temperature is negative */
+  {
+    High = High ^ B01111111;    /* Complement all of the bits, except the MSB */
+    Decimal = Decimal ^ 0xFF;   /* Complement all of the bits */
+  }  
+}
+
+/***************************************************************************
  Function Name: Dis_7SEG
 
  Purpose: 
@@ -192,6 +260,69 @@ void Dis_7SEG (int Decimal, byte High, byte Low, bool sign)
 {
   byte Digit = 4;                 /* Number of 7-Segment digit */
   byte Number;                    /* Temporary variable hold the number to display */
+  
+  if (sign == 0)                  /* When the temperature is negative */
+  {
+    Send7SEG(Digit,0x40);         /* Display "-" sign */
+    Digit--;                      /* Decrement number of digit */
+  }
+  
+  if (High > 99)                  /* When the temperature is three digits long */
+  {
+    Number = High / 100;          /* Get the hundredth digit */
+    Send7SEG (Digit,NumberLookup[Number]);     /* Display on the 7-Segment */
+    High = High % 100;            /* Remove the hundredth digit from the TempHi */
+    Digit--;                      /* Subtract 1 digit */    
+  }
+  
+  if (High > 9)
+  {
+    Number = High / 10;           /* Get the tenth digit */
+    Send7SEG (Digit,NumberLookup[Number]);     /* Display on the 7-Segment */
+    High = High % 10;            /* Remove the tenth digit from the TempHi */
+    Digit--;                      /* Subtract 1 digit */
+  }
+  
+  Number = High;                  /* Display the last digit */
+  Number = NumberLookup [Number]; 
+  if (Digit > 1)                  /* Display "." if it is not the last digit on 7-SEG */
+  {
+    Number = Number | B10000000;
+  }
+  Send7SEG (Digit,Number);  
+  Digit--;                        /* Subtract 1 digit */
+  
+  if (Digit > 0)                  /* Display decimal point if there is more space on 7-SEG */
+  {
+    Number = Decimal / 1000;
+    Send7SEG (Digit,NumberLookup[Number]);
+    Digit--;
+  }
+
+  if (Digit > 0)                 /* Display "c" if there is more space on 7-SEG */
+  {
+    Send7SEG (Digit,0x58);
+    Digit--;
+  }
+  
+  if (Digit > 0)                 /* Clear the rest of the digit */
+  {
+    Send7SEG (Digit,0x00);    
+  }  
+}
+
+/***************************************************************************
+ Function Name: Dis_7SEG_Fah
+
+ Purpose: 
+   Display number on the 7-segment display.
+****************************************************************************/
+void Dis_7SEG_Fah (int Decimal, byte High, byte Low, bool sign)
+{
+  byte Digit = 4;                 /* Number of 7-Segment digit */
+  byte Number;                    /* Temporary variable hold the number to display */
+
+  High = High * 9 / 5 + 32;
   
   if (sign == 0)                  /* When the temperature is negative */
   {
@@ -305,31 +436,45 @@ void SerialMonitorPrint (byte Temperature_H, int Decimal, bool IsPositive)
     Serial.print("\n\n");
 }
     
-
 /***************************************************************************
- Function Name: Fah_temp
+ Function Name: LOL
 
  Purpose: 
-   Calculate temperature from raw data in F.
+   Display LOL on the 7-segment display.
 ****************************************************************************/
-void Fah_temp (int& Decimal, byte& High, byte& Low, bool& sign)
+void LOL ()
 {
-  if ((High&B10000000)==0x80)    /* Check for negative temperature. */
-    sign = 0;
-  else
-    sign = 1;
-    
-  High = High & B01111111;      /* Remove sign bit */
-  Low = Low & B11110000;        /* Remove last 4 bits */
-  Low = Low >> 4; 
-  Decimal = Low;
-  Decimal = Decimal * 625;      /* Each bit = 0.0625 degree C */
-  Decimal = Decimal *1.8 + 32;   //converting to Fahrenheit
-  
-  if (sign == 0)                /* if temperature is negative */
-  {
-    High = High ^ B01111111;    /* Complement all of the bits, except the MSB */
-    Decimal = Decimal ^ 0xFF;   /* Complement all of the bits */
-  }  
+ 
+  Send7SEG(4,0x38);         /* Display "L"  */
+  Send7SEG(3,0x3F);
+  Send7SEG(2,0x38);
 }
 
+/***************************************************************************
+ Function Name: SOS
+
+ Purpose: 
+   Display SOS on the 7-segment display.
+****************************************************************************/
+void SOS ()
+{
+ 
+  Send7SEG(4,0x6D);         /* Display "S"  */
+  Send7SEG(3,0x3F);
+  Send7SEG(2,0x6D);
+}
+
+/***************************************************************************
+ Function Name: [][]
+
+ Purpose: 
+   Display SOS on the 7-segment display.
+****************************************************************************/
+void brak ()
+{
+ 
+  Send7SEG(4,0x39);         /* Display "[][]"  */
+  Send7SEG(3,0x0F);
+  Send7SEG(2,0x39);
+  Send7SEG(1,0x0F);
+}
