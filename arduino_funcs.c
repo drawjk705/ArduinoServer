@@ -78,7 +78,10 @@ void* get_temps(void* p) {
     }
     else {
       printf("Arduino is not connected. Will try to connect\n");
-      get_started(file_name);
+      get_started("/dev/tty/ACM0");
+      if (is_open == 1) {
+        get_started("/dev/tty/ACM1");
+      }
       sleep(10);
       if (is_open == 0) {
         for (int i = 0; i < 10; i++) {

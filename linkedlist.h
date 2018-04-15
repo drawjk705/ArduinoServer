@@ -18,4 +18,4 @@ struct LinkedList {
 int add_to_front(void* value, linkedlist* l);
 int add_to_tail(void* value, linkedlist* l);
 int remove_from_front(linkedlist* l);
-void** to_array(linkedlist* l);
+char* to_string(linkedlist* l);

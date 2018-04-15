@@ -54,40 +54,8 @@ int remove_from_front(linkedlist* l) {
  * @param l the linked list to convert
  * @return a pointer to an array version of the linked list
  */
-void** to_array(linkedlist* l) {
+char* to_string(linkedlist* l) {
 
-  void** array = malloc(sizeof(void*));
-  int i = 0;
-  node* trav = l->head;
-  while(trav != NULL) {
-    array[i] = malloc(sizeof(node));
-    array[i] = trav->value;
-    i++;
-    trav = trav->next;
-  }
-
-  return array;
+  char* out = malloc(sizeof(char));
+  return out;
 }
-
-
-// int main()
-// {
-  
-//   linkedlist* l = malloc(sizeof(linkedlist));
-//   int* x = malloc(sizeof(int));
-//   *x = 3;
-//   add_to_front(x, l);
-//   int* y = malloc(sizeof(int));;
-//   *y = 32;
-//   add_to_front(y, l);
-//   int* z = malloc(sizeof(int));;
-//   *z = 14;
-//   add_to_front(z, l);
-
-//   void** array = to_array(l);
-//   for (int i = 0; i < l->size; i++) {
-//     printf("%d\n", *(int*)array[i]);
-//   }
-
-//   return 0;
-// }
