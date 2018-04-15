@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
+#include <math.h>
 
 typedef struct Node node;
 struct Node {
@@ -16,20 +18,16 @@ struct Dictonary {
   int size;  
 };
 
-int add_to_dict(void* value, dict* d);
-
-char* dict_to_string(dict* d);
-
 typedef struct KVPair kvp;
 struct KVPair {
-    int key;
-    float value;
+    void* key;
+    void* value;
 };
 
-int write_to_file(char* filename, dict* d);        // add to file if file exists
-int update_file(char* filename, kvp* d);
+int add_to_dict(kvp* p, dict* d);
+char* dict_to_string(dict* d);
+int write_to_file(char* filename, dict* d);
+dict* read_from_file(char* filename);
+kvp* make_pair(void* key, void* value);
 
-kvp* make_pair(int key, float value);
-char* kvp_to_string(kvp* k);
-
-void my_itoa(int x, char* dest);
+char* num_to_string(void* num);
