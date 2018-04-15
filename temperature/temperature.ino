@@ -39,6 +39,7 @@ const byte NumberLookup[16] =   {0x3F,0x06,0x5B,0x4F,0x66,
 void Cal_temp (int&, byte&, byte&, bool&);
 void Fah_temp (int&, byte&, byte&, bool&);
 void Dis_7SEG (int, byte, byte, bool);
+void Dis_7SEG_Fah (int, byte, byte, bool);
 void Send7SEG (byte, byte);
 void SerialMonitorPrint (byte, int, bool);
 void UpdateRGB (byte);
@@ -114,7 +115,7 @@ void loop()
     delay (250);
   }
 
-  int incomingByte = 'f';
+  int incomingByte = 'c';
   
   while (1)
   {
@@ -465,7 +466,7 @@ void SOS ()
 }
 
 /***************************************************************************
- Function Name: [][]
+ Function Name: brak
 
  Purpose: 
    Display SOS on the 7-segment display.
