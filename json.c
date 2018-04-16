@@ -1,17 +1,26 @@
 #include "json.h"
 
+/**
+ * add to dictionary -- which is essentially a linked list
+ * @param  p key-value pait to add
+ * @param  d dictionary to which to add
+ * @return   0 if fail, 1 if success
+ */
 int add_to_dict(kvp* p, dict* d) {
   if (p == NULL || d == NULL) {
     return 0;
   }
   if (d->head == NULL) {
     node* new   = malloc(sizeof(node));
+    if (new == NULL) {
+      return 0;
+    }
     new->value  = p;
     new->next   = NULL;
     d->head     = new;
   }
   else {
-    node* new         = malloc(sizeof(node));
+    node* new   = malloc(sizeof(node));
     if (new == NULL) {
       return 0;
     }  
@@ -32,43 +41,50 @@ int add_to_dict(kvp* p, dict* d) {
   return 1;
 }
 
+/**
+ * take a dictionary and write it to file
+ * @param  filename filename to which to write the dictionary
+ * @param  d        dictionary to write
+ * @return          1 if success, 0 if fail
+ */
 int write_to_json(char* filename, dict* d) {
   
+  // open file
   FILE* fp = fopen(filename, "w+");
   if (fp == NULL) {
     perror("Cannot open file");
+    return 0;
   }
+
+  // print opening {
   fprintf(fp, "{");
 
+  // trav along
   node* trav = d->head;
 
   while (trav != NULL) {
-    kvp* k       = (kvp*) trav->value;
-    void* key    = k->key;
-    void* value  = k->value;
 
-    // printing...
+    // go through each kvp
+    kvp* k = (kvp*) trav->value;
+
+    // print appropriate quotation marks
     fprintf(fp, "\"");
-    fprintf(fp, "%s", (char*) key);
+    fprintf(fp, "%s", (char*) k->key);
     fprintf(fp, "\"");
     fprintf(fp, ":");
     
     fprintf(fp, "\"");
-    if (((char*)value)[0] == '"') {
-      for (int i = 0; i < strlen((char*)value); i++) {
-        if (((char*)value)[i] != '"') {
-          fprintf(fp, "%c", ((char*)value)[i]);
-        }
+    // print value string; omit quotation marks
+    for (int i = 0; i < strlen((char*)k->value); i++) {
+      if (((char*)k->value)[i] != '"') {
+        fprintf(fp, "%c", ((char*)k->value)[i]);
       }
     }
-    else {
-      char* string_rep = num_to_string(value);
-      fprintf(fp, "%s", string_rep);
-      free(string_rep);
-    }
+    // print closing quotation mark
     fprintf(fp, "\"");
 
     trav = trav->next;
+    // print , where appropriate
     if (trav != NULL) {
       fprintf(fp, ",");
     }
@@ -80,94 +96,127 @@ int write_to_json(char* filename, dict* d) {
 
   fclose(fp);
 
-  return 0;
+  return 1;
 }
 
-
+/**
+ * read a dictionary from a .json file
+ * @param  filename [description]
+ * @return          [description]
+ */
 dict* read_from_file(char* filename) {
 
   FILE* fp = fopen(filename, "r");
   if (fp == NULL) {
-    return NULL;
+    perror("file does not exist");
+    exit(1);
   }
 
+  // create dictionary pointer
   dict* d;
 
+  // buffer to hold each char
   char buf;
+
+  // buffer for key data
   char* key_buf = malloc(sizeof(char) * 20);
   int key_ind   = 0;
 
+  // buffer for value data
   char* val_buf = malloc(sizeof(char) * 20);
   int val_ind   = 0;
 
+  // flag to determine if are at a value or not
   int is_val    = 0;
+    
+  // "stack" to keep track of quotation marks
+  char stack[1];
+  stack[0] = '\0';            // set the stack
 
+  // keep on reading...
   while (fread(&buf, sizeof(char), 1, fp) == 1) {
 
-    // starting dictionary
+    // when are at the start of a dictionary
     if (buf == '{') {
       d = malloc(sizeof(dict));
       d->head = NULL;
+      d->size = 0;
     }
-    // ending key-value pair or dictionary
-    else if (buf == ',' || buf == '}') {
+    // when are at end of kvp
+    else if (buf == '}' || (buf == ',' && stack[0] == '\0')) {
+      // null-terminate value
       val_buf[val_ind] = '\0';
-      is_val = 0;
-      kvp* temp = make_pair(key_buf, val_buf);  // this will free() key_buf & val_buf
-      add_to_dict(temp, d);                     // this will free() temp
-
-      // if are continuing dictionary
+      
+      // copy strings
+      char* k_cpy = malloc(sizeof(char) * (strlen(key_buf) + 1));
+      char* v_cpy = malloc(sizeof(char) * (strlen(val_buf) + 1));
+      
+      strcpy(k_cpy, key_buf);
+      strcpy(v_cpy, val_buf);
+      
+      // make the kvp
+      kvp* k = make_pair(k_cpy, v_cpy);
+      // add to the dictionary
+      add_to_dict(k, d);
+      // continue if appropriate
       if (buf == ',') {
-        char* key_buf = malloc(sizeof(char) * 20);
-        int key_ind   = 0;
+        is_val = 0;
 
-        char* val_buf = malloc(sizeof(char) * 20);
-        int val_ind   = 0;
+        val_ind= 0;
+        key_buf[0] = '\0';
+        val_buf[0] = '\0';
+
       }
-      // otherwise
+      // terminate, if not
       else {
         break;
       }
     }
-    // end of key
-    else if (buf == ':') {
-      key_buf[key_ind] = '\0';
-      is_val = 1;
-    }
-    // writing key or value
-    else {
-      // if key
-      if (!is_val) {
-        // ignore quotation marks
-        if (buf == '"') {
-          // do nothing
-        }
-        else {
-          // write into key_buf
-          key_buf[key_ind++] = buf;
-          // realloc() if necessary
-          if (key_ind == sizeof(key_buf)) {
-            key_buf = realloc(key_buf, sizeof(key_buf) * 2);
-          }
-        }
+    // balancing quotation marks
+    else if (buf == '"') {
+      if (stack[0] == '\0') {
+        stack[0] = '"';
+      } else {
+        stack[0] = '\0';
       }
-      // if value
+    }
+    // time to write
+    else {
+      if (buf == ':' && stack[0] == '\0') {
+        // set flag
+        is_val = 1;
+        // null-terminate key
+        key_buf[key_ind] = '\0';
+        // reset key index
+        key_ind = 0;
+      }
       else {
-        // write into val_buf
-        val_buf[val_ind++] = buf;
-        // realloc() if necessary
-        if (val_ind == sizeof(val_buf)) {
-          val_buf = realloc(val_buf, sizeof(val_buf) * 2);
+        // store to buffers
+        if (!is_val) {
+          key_buf[key_ind++] = buf;
+          if (key_ind >= strlen(key_buf)) {
+            key_buf = realloc(key_buf, sizeof(char) * strlen(key_buf) * 2);
+          }
+        } else {
+          val_buf[val_ind++] = buf;
+          if (val_ind >= strlen(val_buf)) {
+            val_buf = realloc(val_buf, sizeof(char) * strlen(val_buf) * 2);
+          }
         }
       }
     }
   }
+  
   return d;
 }
 
 
-
-
+/**
+ * make a key-value pair
+ * @param  key   key of the pair
+ * @param  value value of the pair
+ * @return       kvp pointer
+ */
 kvp* make_pair(void* key, void* value) {
 
   kvp* k = malloc(sizeof(kvp));
@@ -178,25 +227,15 @@ kvp* make_pair(void* key, void* value) {
   return k;
 }
 
+int main() {
 
-int main(int argc, char const *argv[]) {
+  int x = 234234;
 
-  dict* d = malloc(sizeof(dict));
+  char* c = num_to_string(&x);
 
-  char* curr_time = "hello";
-  float temp = 24.1;
+  printf("%s\n", c);
 
-  kvp* k1 = make_pair(curr_time, &temp);
-
-  add_to_dict(k1, d);
-
-  write_to_json("out.json", d);
-
-  dict* d2 = read_from_file("out.json");
-  write_to_json("out2.json", d2);
-
-
-  return 0;
+  return 1;
 }
 
 /**
@@ -207,18 +246,27 @@ int main(int argc, char const *argv[]) {
  */
 char* num_to_string(void* num) {
 
+  // flag to check if the number is an int vs. a float
   int is_int = 0;
+
+  // count of digits before the decimal point
   int before_dec = 0;
+
+  // try to cast to float to int
   int temp = *(float*) num;
   if (temp == 0) {
+    // if the cast fails, the number is an int
     temp = *(int*) num;
     is_int = 1;
   }
+
+  // count digits before decimal
   while (temp > 0) {
     temp /= 10;
     before_dec++;
   }
 
+  // count digits following decimal
   int after_dec = 0;
   float temp2 = *(float*) num;
   while (((int) temp2 % 10) != 0) {
@@ -226,9 +274,14 @@ char* num_to_string(void* num) {
     after_dec++;
   }
   
+  // get full number length
   int num_len = before_dec + after_dec + 1;
+
+  // make string
   char* dest = malloc(sizeof(char) * (num_len + 1));
 
+  // get the full non-float representation of the number
+  // i.e., no decimal
   int full_num = 0;
   if (!is_int) {
     full_num = (int) temp2;
@@ -236,6 +289,7 @@ char* num_to_string(void* num) {
   else {
     full_num = *(int*) num;
   }
+  // insert digits backwards (from 1s to higher places)
   dest[num_len] = '\0';
   for (int i = num_len - 1; i >= 0; i--) {
     if (i == before_dec) {
