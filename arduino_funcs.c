@@ -3,7 +3,7 @@
 
 // flag to determine if arduino is open or not
 // for reading and writing
-int is_open;    // -1 if not open, 0 if open
+int is_open;    // 0 if not open, 1 if open
 
 /*
 This code configures the file descriptor for use as a serial port.
@@ -28,14 +28,14 @@ int get_started(char* file_name) {
   
   if (ard_fd < 0) {
     printf("Cannot open file\n");
-    is_open = -1;
-    return -1;
+    is_open = 0;
+    return 0;
     // perror("Could not open file\n");
     // exit(1);
   }
   else {
     printf("Successfully opened %s for reading and writing\n", file_name);
-    is_open = 0;
+    is_open = 1;
   }
 
   configure(ard_fd);
@@ -53,30 +53,36 @@ int get_started(char* file_name) {
  */
 void* get_temps(void* p) {
 
+  // char* filename;
+  // int ard_fd;
+  // is_open = 0;
+
   dict* d = malloc(sizeof(dict));
 
   printf("In gettemps\n");
 
-  packet* pack = (packet*) p;
+  packet* pack   = (packet*) p;
 
   // unpack packet
-  char* file_name = pack->filename;
-  int ard_fd = pack->ard_fd;
-  char* quit = pack->quit_ptr;
+  char* filename = pack->filename;
+  int ard_fd     = pack->ard_fd;
+  char* quit     = pack->quit_ptr;
 
   // read through a few times to get
   // rid of any potential garbage that's
   // being outputted
-  if (is_open == 0) {
+  if (is_open) {
     for (int i = 0; i < 10; i++) {
-      read_temp(file_name, ard_fd);
+      read_temp(filename, ard_fd);
     }
   }
 
   while (*quit != 'q') {
     printf("%c\n", *quit);
-    if (is_open == 0) {
-      float* f = read_temp(file_name, ard_fd);
+    
+    // if connection to Arduino is open
+    if (is_open) {
+      float* f = read_temp(filename, ard_fd);
       
       /**** write temperature to file ****/
       
@@ -100,16 +106,48 @@ void* get_temps(void* p) {
       printf("completed readings\n");
       sleep(2);
     }
+    // if connection is not open
     else {
+
+      /**** send message to file ****/
+      
+      // get current time
+      char* curr_time = get_current_time();
+      strip_fat(curr_time);
+
+      char* message = "OFFLINE";
+
+      // create key-value pair of the 2
+      kvp* k = make_pair(curr_time, message);
+
+      // add to dictionary
+      add_to_dict(k, d);
+
+      /******************************/
+
       printf("Arduino is not connected. Will try to connect\n");
-      get_started("/dev/tty/ACM0");
-      if (is_open == 1) {
-        get_started("/dev/tty/ACM1");
+      // try the first port option
+      int temp = get_started("/dev/tty/ACM0");
+      if (is_open) {
+        // reset filename and ard_fd
+        filename     = "/dev/tty/ACM0";
+        ard_fd       = temp;
+        pack->ard_fd = ard_fd;
+      }
+      // otherwise, try second
+      if (!is_open) {
+        temp = get_started("/dev/tty/ACM1");
+        if (is_open) {
+          // reset filename and ard_fd
+          filename     = "/dev/tty/ACM1";
+          ard_fd       = temp;
+          pack->ard_fd = ard_fd;
+        }
       }
       sleep(10);
-      if (is_open == 0) {
+      if (is_open) {
         for (int i = 0; i < 10; i++) {
-          read_temp(file_name, ard_fd);
+          read_temp(filename, ard_fd);
         }
       }
     }
@@ -192,7 +230,7 @@ float* strip_letters(char* str) {
  * @param c  message to send
  */
 void write_to_arduino(int fd, char c) {
-  if (is_open == -1) {
+  if (!is_open) {
     printf("Arduino is not open for writing\n");
     return;
   }
@@ -203,45 +241,19 @@ void write_to_arduino(int fd, char c) {
   printf("writing %c to Arduino\n", c);
 }
 
-// void write_temp_to_file(float* temp) {
-
-//   FILE* f = fopen("temperatures.txt", "r");
-
-//   // get file length
-//   int file_len = fseek(f, 0, SEEK_END);
-
-//   char* buff = malloc(sizeof(char) * (file_len + 1));
-
-//   // reset location in file
-//   fseek(f, 0, SEEK_SET);
-
-//   // read file into buffer
-//   fread(buff, sizeof(char), file_len, f);
-
-//   fclose(f);
-
-//   f = fopen("temperatures.txt", "w");
-
-//   fwrite(temp, sizeof(float), 1, f);
-//   fwrite(buff, sizeof(char), strlen(buff), f);
-
-//   fclose(f);
-
-// }
-
 /**
  * check if file descriptor is still open
  * --> will be used by server to report on
  *     arduino status
  * @param  fd file descriptor in question
- * @return    -1 if no, 0 if yes
+ * @return    0 if no, 1 if yes
  */
 int check_if_open(int fd) {
   if (fcntl(fd, F_GETFL) < 0 && errno == EBADF) {
-    is_open = -1;
-    return -1;
-  } else {
     is_open = 0;
     return 0;
+  } else {
+    is_open = 1;
+    return 1;
   }
 }

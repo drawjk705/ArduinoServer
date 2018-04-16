@@ -10,18 +10,18 @@ http://www.binarii.com/files/papers/c_sockets.txt
 
 char quit;
 
-void* say_hello(void* p) {
-  int i = 0;
-  while(quit != 'q') {
-    // pthread_mutex_lock(&lock);
-    printf("%d\n", i++);
-    // sleep(2);
-    if (i % 5 == 0) {
-      // pthread_mutex_unlock(&lock);
-    }
-  }
-  pthread_exit(NULL);
-}
+// void* say_hello(void* p) {
+//   int i = 0;
+//   while(quit != 'q') {
+//     // pthread_mutex_lock(&lock);
+//     printf("%d\n", i++);
+//     // sleep(2);
+//     if (i % 5 == 0) {
+//       // pthread_mutex_unlock(&lock);
+//     }
+//   }
+//   pthread_exit(NULL);
+// }
 
 int start_server(int PORT_NUMBER) {
   
@@ -90,40 +90,38 @@ int start_server(int PORT_NUMBER) {
     // retrieve file descriptor from Arduino
     int ard_fd = get_started(filename);
 
-    // write intial null char to Arduino to clear out
+    // write initial null char to Arduino to clear out
     write_to_arduino(ard_fd, '\0');
 
     // create a packet with relevant data
 
-    packet* pack0 = malloc(sizeof(packet));
-    pack0->filename = filename;
-    pack0->ard_fd = ard_fd;
-    pack0->quit_ptr = &quit;
+    packet* pack   = malloc(sizeof(packet));
+    pack->filename = filename;
+    pack->ard_fd   = ard_fd;
+    pack->quit_ptr = &quit;
 
     pthread_t ard_t;
 
-    pthread_create(&ard_t, NULL, &get_temps, pack0);
+    pthread_create(&ard_t, NULL, &get_temps, pack);
 
     // keep on accepting requests as long as
     // haven't received command to close server
     while (quit != 'q') {
 
-      // >>>>> // send appropriate messages to site <<<<<< //
-      if (check_if_open(ard_fd) == -1) {
+      if (check_if_open(pack->ard_fd) == -1) {
         printf("Arduino has been disconnected\n");
       } else {
         printf("Arduino is connected\n");
       }
 
-      /***********************************/
-          // create close_server thread //
+      /**** create close_server thread ****/
+          
           pthread_t close;
           pthread_create(&close, NULL, &close_server, NULL);
 
-      /***********************************/
+      /************************************/
 
-      /**************************************************/
-      /** set up select() for accept()ing HTML requests */
+      /******** set up select() for accept()ing HTML requests ********/
       int sret;                     // to get return value from select()
       fd_set readfds;               // bit array to represent fds
       struct timeval timeout;       // struct to determine how long to wait before timeout
@@ -131,22 +129,23 @@ int start_server(int PORT_NUMBER) {
       FD_SET(sock, &readfds);       // set bit array
       timeout.tv_sec = 3;           // set timeout time
       timeout.tv_usec = 0;
-      /**************************************************/
+      /***************************************************************/
 
       sret = select(8, &readfds, NULL, NULL, &timeout);     // run the select()
 
       // if have received an HTTP request...
       if (sret != 0) {
-        
+
         // accept
         int fd = accept(sock, (struct sockaddr *)&client_addr,(socklen_t *)&sin_size);
+      
         if (fd != -1) {
 
-          pack0->client_addr = client_addr; // add additional info to packet
-          pack0->fd = fd;
+          pack->client_addr = client_addr;  // add additional info to packet
+          pack->fd = fd;
           
           pthread_t req;                    // create request thread
-          pthread_create(&req, NULL, &handle_connection, pack0);
+          pthread_create(&req, NULL, &handle_connection, pack);
           
           pthread_join(req, NULL);          // join request thread
         }
@@ -208,10 +207,10 @@ void* close_server(void* p) {
 void* handle_connection(void* p) {
 
     // unpack packet
-    packet* pack = (packet*) p;
+    packet* pack                   = (packet*) p;
     struct sockaddr_in client_addr = pack->client_addr;
-    int fd = pack->fd;
-    int ard_fd = pack->ard_fd;
+    int fd                         = pack->fd;
+    int ard_fd                     = pack->ard_fd;
 
     printf("Server got a connection from (%s, %d)\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
@@ -258,18 +257,19 @@ void* handle_connection(void* p) {
       char* post = get_post(request);
       char c = parse_post(post);
       printf("\n\n%c\n\n\n", c);
-      if (c == 'r') {
-        printf("Making it red\n");
-        write_to_arduino(ard_fd, 'r');
-      } 
-      if (c == 'g') {
-        printf("making it green\n");
-        write_to_arduino(ard_fd, 'g');
-      }
-      if (c == 'b') {
-        printf("making it blue\n");
-        write_to_arduino(ard_fd, 'b');
-      }
+      // if (c == 'r') {
+      //   printf("Making it red\n");
+      //   write_to_arduino(pack->ard_fd, 'r');
+      // } 
+      // if (c == 'g') {
+      //   printf("making it green\n");
+      //   write_to_arduino(pack->ard_fd, 'g');
+      // }
+      // if (c == 'b') {
+      //   printf("making it blue\n");
+      //   write_to_arduino(pack->ard_fd, 'b');
+      // }
+      write_to_arduino(pack->ard_fd, c);
     }
     
     free(reply);
