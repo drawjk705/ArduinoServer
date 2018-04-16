@@ -102,7 +102,7 @@ void* get_temps(void* p) {
       // write dictionary to file
       write_to_json("temperatures.json", d);
 
-      free(f);
+      // free(f);
       printf("completed readings\n");
       sleep(2);
     }
@@ -115,13 +115,18 @@ void* get_temps(void* p) {
       char* curr_time = get_current_time();
       strip_fat(curr_time);
 
-      char* message = "OFFLINE";
+      // send offline message
+      char* message = malloc(sizeof(char) * (strlen("OFFLINE") + 1));
+      strcpy(message, "OFFLINE");
 
       // create key-value pair of the 2
       kvp* k = make_pair(curr_time, message);
 
       // add to dictionary
       add_to_dict(k, d);
+
+      // write to file
+      write_to_json("temperatures.json", d);
 
       /******************************/
 
@@ -144,11 +149,12 @@ void* get_temps(void* p) {
           pack->ard_fd = ard_fd;
         }
       }
-      sleep(10);
       if (is_open) {
         for (int i = 0; i < 10; i++) {
           read_temp(filename, ard_fd);
         }
+      } else {
+        sleep(5);
       }
     }
   }

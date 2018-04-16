@@ -38,3 +38,5 @@ char parse_post(char* post);
 char* read_html_file(char* filename);
 
 void* close_server(void* p);
+
+int get_filetype(char* filename);

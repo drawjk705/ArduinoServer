@@ -108,11 +108,11 @@ int start_server(int PORT_NUMBER) {
     // haven't received command to close server
     while (quit != 'q') {
 
-      if (check_if_open(pack->ard_fd) == -1) {
-        printf("Arduino has been disconnected\n");
-      } else {
-        printf("Arduino is connected\n");
-      }
+      // if (check_if_open(pack->ard_fd) == 0) {
+      //   printf("Arduino has been disconnected\n");
+      // } else {
+      //   printf("Arduino is connected\n");
+      // }
 
       /**** create close_server thread ****/
           
@@ -154,6 +154,9 @@ int start_server(int PORT_NUMBER) {
     }
 
     pthread_join(ard_t, NULL);              // join thread that handles Arduino behavior
+
+    // free() pack
+    free(pack);
 
     // 8. close: close the socket
     close(sock);
@@ -224,10 +227,6 @@ void* handle_connection(void* p) {
     // print it to standard out
     printf("This is the incoming request:\n%s\n", request);
 
-    // this is the message that we'll send back
-    char* reply = malloc(sizeof(char) * 100);
-    strcpy(reply, "HTTP/1.1 200 OK\nContent-Type: text/html\n\n");      // <<<<<<< specify if is text/css or jscript
-
     // parse request
     char* req = get_path(request);
 
@@ -238,8 +237,36 @@ void* handle_connection(void* p) {
       pthread_exit(NULL);
     }
 
+    // figure out filetype of requested file
+    int type = get_filetype(req);
+    char* type_msg;
+    switch(type) {
+      case 1:
+        type_msg = "text/html";
+        break;
+      case 2:
+        type_msg = "text/css";
+        break;
+      case 3:
+        type_msg = "application/javascript";
+        break;
+    }
+
+    // this is the message that we'll send back
+    char* reply = malloc(sizeof(char) * 100);
+    sprintf(reply, "HTTP/1.1 200 OK\nContent-Type: %s\n\n", type_msg);
+
+
     // read the HTML file, and append it to the reply
     char* add = read_html_file(req);
+    
+    // handle invalid requests
+    if (add == NULL) {
+      free(req);
+      free(reply);
+      close(fd);
+      pthread_exit(NULL);
+    }
     free(req);
 
     // realloc() reply

@@ -109,6 +109,9 @@ char* read_html_file(char* filename) {
     
     // create file pointer
     FILE* fp = fopen(filename, "r");
+    if (fp == NULL) {
+        return NULL;
+    }
 
     // get length of file
     fseek(fp, 0, SEEK_END);
@@ -157,4 +160,36 @@ char parse_post(char* post) {
 
 
     return '\0';
+}
+
+/**
+ * get the type of a file
+ * @param  filename file's name
+ * @return          0 if fail;
+ *                  1 if html
+ *                  2 if css
+ *                  3 if javascript
+ */
+int get_filetype(char* filename) {
+
+    int watch = 0;
+
+    for (int i = 0; i < strlen(filename); i++) {
+        if (watch) {
+            if (filename[i] == 'h') {
+                return 1;
+            }
+            else if (filename[i] == 'c') {
+                return 2;
+            }
+            else if (filename[i] == 'j') {
+                return 3;
+            }
+        }
+        if (filename[i] == '.') {
+            watch = 1;
+        }
+    }
+
+    return 0;
 }

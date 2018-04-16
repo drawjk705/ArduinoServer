@@ -233,7 +233,7 @@ void clear_dictionary(dict* d) {
   node* prev;
 
   while (trav != NULL) {
-    free(((kvp*)trav->value)->key);
+    // free(((kvp*)trav->value)->key);
     free(((kvp*)trav->value)->value);
     prev = trav;
     trav = trav->next;
