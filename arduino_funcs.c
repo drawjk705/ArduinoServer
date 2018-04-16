@@ -46,9 +46,14 @@ int get_started(char* file_name) {
 /**
  * function to keep on getting the
  * current temperature from the Arduino
+ *
+ * will also write the temperature to a json file
+ * 
  * @param p packet with relevant data
  */
 void* get_temps(void* p) {
+
+  dict* d = malloc(sizeof(dict));
 
   printf("In gettemps\n");
 
@@ -72,6 +77,25 @@ void* get_temps(void* p) {
     printf("%c\n", *quit);
     if (is_open == 0) {
       float* f = read_temp(file_name, ard_fd);
+      
+      /**** write temperature to file ****/
+      
+      // get current time
+      char* curr_time = get_current_time();
+      strip_fat(curr_time);
+
+      // convert temperature to string
+      char* str_temp = num_to_string(f);
+
+      // create key-value pair of the 2
+      kvp* k = make_pair(curr_time, str_temp);
+
+      // add to dictionary
+      add_to_dict(k, d);
+
+      // write dictionary to file
+      write_to_json("temperatures.json", d);
+
       free(f);
       printf("completed readings\n");
       sleep(2);
@@ -90,6 +114,8 @@ void* get_temps(void* p) {
       }
     }
   }
+
+  clear_dictionary(d);
 
   pthread_exit(NULL);
 }

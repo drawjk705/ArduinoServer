@@ -8,7 +8,6 @@ http://www.binarii.com/files/papers/c_sockets.txt
 #include "server_helper.h"
 #include "arduino_funcs.h"
 
-char resp[100];
 char quit;
 
 void* say_hello(void* p) {
@@ -172,7 +171,7 @@ int start_server(int PORT_NUMBER) {
  */
 void* close_server(void* p) {
 
-    quit = '\0';        // intialize quit
+    quit = '\0';            // intialize quit
 
     /** preparing the select() for stdin */
 
@@ -235,9 +234,9 @@ void* handle_connection(void* p) {
 
     // ignore favicon.ico requests
     if (strcmp(req, "favicon.ico") == 0) {
-          close(fd);
-          free(req);
-          pthread_exit(NULL);
+      close(fd);
+      free(req);
+      pthread_exit(NULL);
     }
 
     // read the HTML file, and append it to the reply

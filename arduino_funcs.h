@@ -12,6 +12,8 @@
 #include <string.h>
 #include <pthread.h>
 #include <time.h>
+#include "times.h"
+#include "json.h"
 
 void configure(int fd);
 

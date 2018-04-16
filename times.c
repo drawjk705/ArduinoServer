@@ -21,19 +21,9 @@ void strip_fat(char* time) {
 
     char* token = strtok(time_cpy, delim);
 
-    // char buf[10];
-
     while (strlen(token) != 8) {
         token = strtok(NULL, delim);
     }
     strcpy(time, token);
     free(time_cpy);
 }
-
-int main() {
-    
-    char* time = get_current_time();
-
-    return 0;
-}
-

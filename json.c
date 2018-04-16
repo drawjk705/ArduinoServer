@@ -227,16 +227,21 @@ kvp* make_pair(void* key, void* value) {
   return k;
 }
 
-int main() {
+void clear_dictionary(dict* d) {
 
-  int x = 234234;
+  node* trav = d->head;
+  node* prev;
 
-  char* c = num_to_string(&x);
-
-  printf("%s\n", c);
-
-  return 1;
+  while (trav != NULL) {
+    free(((kvp*)trav->value)->key);
+    free(((kvp*)trav->value)->value);
+    prev = trav;
+    trav = trav->next;
+    free(prev);
+  }
+  free(d);
 }
+
 
 /**
  * simple (doesn't cover all cases) way to convert number

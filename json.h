@@ -24,8 +24,9 @@ struct KVPair {
 
 int add_to_dict(kvp* p, dict* d);
 char* dict_to_string(dict* d);
-int write_to_file(char* filename, dict* d);
+int write_to_json(char* filename, dict* d);
 dict* read_from_file(char* filename);
 kvp* make_pair(void* key, void* value);
+void clear_dictionary(dict* d);
 
 char* num_to_string(void* num);
