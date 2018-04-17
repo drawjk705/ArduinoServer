@@ -182,16 +182,20 @@ float* read_temp(char* file_name, int fd) {
   while (end == 0) {
       int bytes_read = read(fd, buf, 100);
       for (int i = 0; i < bytes_read; i++) {
-          out[index++] = buf[i];
           if (buf[i] == '\n') {
-              out[index + 1] = '\0';
+              out[index] = '\0';
               // printf("%s\n", out);
               end = 1;
               break;
           }
+          out[index++] = buf[i];
       }
   }
-  float* f = strip_letters(out);
+
+  float* f = malloc(sizeof(float));
+  *f = atof(out);
+
+  // float* f = strip_letters(out);
   printf("%f\n", *f);
 
   return f;
