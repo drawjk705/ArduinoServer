@@ -2,7 +2,7 @@
 
                      Copyright 2008 Gravitech
                         All Rights Reserved
-
+Ace Yiming Zhang Version
 ****************************************************************************/
 
 /***************************************************************************
@@ -66,8 +66,8 @@ void setup()
    Run-time forever loop.
 ****************************************************************************/
  
-void loop() 
-{ 
+void loop(){
+
   int Decimal;
   byte Temperature_H, Temperature_L, counter, counter2;
   bool IsPositive;
@@ -97,6 +97,10 @@ void loop()
   val = 0;  
   Wire.write(val);
   Wire.endTransmission();
+
+  String setc = "c";
+  String setf = "f";
+  String sets = "s";
   
   /* Test 7-Segment */
   for (counter=0; counter<8; counter++)
@@ -151,29 +155,59 @@ void loop()
        digitalWrite(BLUE, LOW);
     }
     
-
-
+  while(1) {
+    String a = Serial.readString();          // read the incoming data as string
     
     Wire.requestFrom(THERM, 2);
     Temperature_H = Wire.read();
     Temperature_L = Wire.read();
     
-    /* Calculate temperature */
-    Cal_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
-    
-    /* Display temperature on the serial monitor. 
+    if ( a == setc){
+      Cal_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
+      digitalWrite(BLUE, HIGH);
+      /* Display temperature on the serial monitor. 
        Comment out this line if you don't use serial monitor.*/
-    SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
+      SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
     
-    /* Update RGB LED.*/
-    //UpdateRGB (Temperature_H);
+      /* Update RGB LED.*/
+//      //UpdateRGB (Temperature_H);
     
-    /* Display temperature on the 7-Segment */
-    Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive);
+      /* Display temperature on the 7-Segment */
+      Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive);
     
-    delay (1000);        /* Take temperature read every 1 second */
+      delay (1000);        /* Take temperature read every 1 second */
+    }
+
+    else if (a == setf){
+      Fah_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
+      digitalWrite(GREEN, HIGH);
+      /* Display temperature on the serial monitor. 
+       Comment out this line if you don't use serial monitor.*/
+      SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
+    
+      /* Update RGB LED.*/
+      //UpdateRGB (Temperature_H);
+    
+      /* Display temperature on the 7-Segment */
+      Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive);
+    
+      delay (1000);        /* Take temperature read every 1 second */
+    }
+
+    else if (a == sets){
+      Fah_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
+      digitalWrite(RED, HIGH);
+      /* Display temperature on the serial monitor. 
+       Comment out this line if you don't use serial monitor.*/
+      SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
+    
+      /* Update RGB LED.*/
+      /* UpdateRGB (Temperature_H); */
+    
+      delay (1000);        /* Take temperature read every 1 second */
+    }
   }
-} 
+}
 
 /***************************************************************************
  Function Name: Cal_temp
@@ -325,4 +359,30 @@ void SerialMonitorPrint (byte Temperature_H, int Decimal, bool IsPositive)
 }
     
 
+/***************************************************************************
+ Function Name: Fah_temp
+
+ Purpose: 
+   Calculate temperature from raw data in F.
+****************************************************************************/
+void Fah_temp (int& Decimal, byte& High, byte& Low, bool& sign)
+{
+  if ((High&B10000000)==0x80)    /* Check for negative temperature. */
+    sign = 0;
+  else
+    sign = 1;
+    
+  High = High & B01111111;      /* Remove sign bit */
+  Low = Low & B11110000;        /* Remove last 4 bits */
+  Low = Low >> 4; 
+  Decimal = Low;
+  Decimal = Decimal * 625;      /* Each bit = 0.0625 degree C */
+  Decimal = Decimal *1.8 + 32;   //converting to Fahrenheit
+  
+  if (sign == 0)                /* if temperature is negative */
+  {
+    High = High ^ B01111111;    /* Complement all of the bits, except the MSB */
+    Decimal = Decimal ^ 0xFF;   /* Complement all of the bits */
+  }  
+}
 
