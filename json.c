@@ -2,6 +2,8 @@
 
 dict* create_dict() {
   dict* d = malloc(sizeof(dict));
+  // char* temp = malloc(sizeof(char) * (strlen("Temp") + 1));
+  // strcpy(temp, "Temp");
   kvp* head = make_pair("Temp", "C");
   d->head = malloc(sizeof(node*));
   d->head->value = head;
@@ -14,6 +16,9 @@ int replace_head(dict* d, char* temp) {
   if (d == NULL || d->head == NULL) {
     return -1;
   }
+
+  // char* t = malloc(sizeof(char) * (strlen("Temp") + 1));
+  // strcpy(t, "Temp");
 
   kvp* new_head = make_pair("Temp", temp);
 
@@ -256,13 +261,22 @@ kvp* make_pair(void* key, void* value) {
 void clear_dictionary(dict* d) {
 
   node* trav = d->head;
+  
+  // decapitate
+  free(d->head->value);
+  free(d->head);
+
+  // for the rest of the dict...
+  trav = trav->next;
   node* prev;
 
   while (trav != NULL) {
     // free(((kvp*)trav->value)->value);
     prev = trav;
     trav = trav->next;
-    free(((kvp*)prev->value)->key);
+    void* key = ((kvp*)prev->value)->key;
+    printf("%s\n", key);
+    free(key);
     free(prev->value);
     free(prev);
   }

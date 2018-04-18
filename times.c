@@ -5,7 +5,8 @@ char* get_current_time() {
     time_t t;
     time(&t);
 
-    char* out = ctime(&t);
+    char* out = malloc(sizeof(char) * 100);
+    strcpy(out, ctime(&t));
 
     strip_fat(out);
     // printf("%s\n", out);

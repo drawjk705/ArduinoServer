@@ -59,8 +59,6 @@ void* get_temps(void* p) {
 
   dict* d = create_dict();
 
-  printf("In gettemps\n");
-
   packet* pack   = (packet*) p;
 
   // unpack packet
@@ -70,17 +68,16 @@ void* get_temps(void* p) {
   pthread_mutex_t* lock = pack->lock;
 
   while (*quit != 'q') {
-
-    if (strcmp(pack->temp_type, "C") == 0) {
-      replace_head(d, "C");
-    } else {
-      replace_head(d, "F");
-    }
     
     printf("\t\t\t%d\n", ard_fd);
 
     // if connection to Arduino is open
     if (is_open) {
+      if (strcmp(pack->temp_type, "C") == 0) {
+        replace_head(d, "C");
+      } else {
+        replace_head(d, "F");
+      }
       pthread_mutex_lock(lock);
       float* f = read_temp(filename, ard_fd);
       pthread_mutex_unlock(lock);
@@ -88,8 +85,8 @@ void* get_temps(void* p) {
       /**** write temperature to file ****/
       
       // get current time
-      char* curr_time = malloc(sizeof(char) * 10);
-      strcpy(curr_time, get_current_time());
+      char* curr_time = get_current_time();
+      strcpy(curr_time, curr_time);
       // strip_fat(curr_time);
       printf("%s\n", curr_time);
 
