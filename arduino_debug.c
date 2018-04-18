@@ -5,6 +5,7 @@
 // for reading and writing
 int is_open;    // 0 if not open, 1 if open
 
+
 /*
 This code configures the file descriptor for use as a serial port.
 */
@@ -61,23 +62,32 @@ void* get_temps(void* p) {
 
   printf("In gettemps\n");
 
-  packet* pack   = (packet*) p;
+  // packet* pack   = (packet*) p;
 
   // unpack packet
-  char* filename        = pack->filename;
-  int ard_fd            = pack->ard_fd;
-  char* quit            = pack->quit_ptr;
-  pthread_mutex_t* lock = pack->lock;
+  char* filename = "";
+  int ard_fd     = -1;
+  // char* quit     = NULL;
 
-  while (*quit != 'q') {
-    
-    printf("\t\t\t%d\n", ard_fd);
+  // read through a few times to get
+  // rid of any potential garbage that's
+  // being outputted
+  if (is_open) {
+    for (int i = 0; i < 10; i++) {
+      read_temp(filename, ard_fd);
+    }
+  }
+
+  while (1) {
+
+    if (is_open) {
+      sleep(3);
+      write_to_arduino(ard_fd, 'b');  
+    }
 
     // if connection to Arduino is open
     if (is_open) {
-      pthread_mutex_lock(lock);
       float* f = read_temp(filename, ard_fd);
-      pthread_mutex_unlock(lock);
       
       /**** write temperature to file ****/
       
@@ -138,7 +148,7 @@ void* get_temps(void* p) {
         // reset filename and ard_fd
         filename     = "/dev/ttyACM0";
         ard_fd       = temp;
-        pack->ard_fd = ard_fd;
+        // pack->ard_fd = ard_fd;
       }
       // otherwise, try second
       if (!is_open) {
@@ -147,7 +157,7 @@ void* get_temps(void* p) {
           // reset filename and ard_fd
           filename     = "/dev/ttyACM1";
           ard_fd       = temp;
-          pack->ard_fd = ard_fd;
+          // pack->ard_fd = ard_fd;
         }
       }
       if (!is_open) {
@@ -176,8 +186,6 @@ float* read_temp(char* file_name, int fd) {
 
   int end = 0;   // flag to determine if are at end of message
 
-  // if have received a certain number of readings
-  // with 0 bytes, arduino must have been disconnected
   int zero_count = 0;
 
   while (end == 0) {
@@ -211,7 +219,6 @@ float* read_temp(char* file_name, int fd) {
   printf("%f\n", *f);
 
   return f;
-
 
 }
 
@@ -261,5 +268,24 @@ void write_to_arduino(int fd, char c) {
     perror("Could not write to Arduino");
     exit(1);
   }
-  printf("\n\n\twriting %c to Arduino\n", c);
+  printf("writing %c to Arduino\n", c);
+  return;
 }
+
+
+
+int main() {
+
+  get_temps(NULL);
+
+
+  return 0;
+}
+
+
+
+
+
+
+
+

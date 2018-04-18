@@ -8,8 +8,6 @@ http://www.binarii.com/files/papers/c_sockets.txt
 #include "server_helper.h"
 #include "arduino_funcs.h"
 
-char quit;
-
 // void* say_hello(void* p) {
 //   int i = 0;
 //   while(quit != 'q') {
@@ -24,7 +22,10 @@ char quit;
 // }
 
 int start_server(int PORT_NUMBER) {
-  
+
+    pthread_mutex_t lock;
+    pthread_mutex_init(&lock, NULL);
+
     /*************************************************************************/
     /********************* Getting the server set up *************************/
     /*************************************************************************/
@@ -84,8 +85,10 @@ int start_server(int PORT_NUMBER) {
     char* filename = "/dev/ttyACM0";
     // char* filename = "/dev/ttyACM1";
 
+    char* quit = malloc(sizeof(char));
+
     // set quit flag to '\0'
-    quit = '\0';
+    *quit = '\0';
 
     // retrieve file descriptor from Arduino
     int ard_fd = get_started(filename);
@@ -98,7 +101,8 @@ int start_server(int PORT_NUMBER) {
     packet* pack   = malloc(sizeof(packet));
     pack->filename = filename;
     pack->ard_fd   = ard_fd;
-    pack->quit_ptr = &quit;
+    pack->quit_ptr = quit;
+    pack->lock     = &lock;
 
     pthread_t ard_t;
 
@@ -106,7 +110,7 @@ int start_server(int PORT_NUMBER) {
 
     // keep on accepting requests as long as
     // haven't received command to close server
-    while (quit != 'q') {
+    while (*quit != 'q') {
 
       // if (check_if_open(pack->ard_fd) == 0) {
       //   printf("Arduino has been disconnected\n");
@@ -117,7 +121,7 @@ int start_server(int PORT_NUMBER) {
       /**** create close_server thread ****/
           
           pthread_t close;
-          pthread_create(&close, NULL, &close_server, NULL);
+          pthread_create(&close, NULL, &close_server, pack);
 
       /************************************/
 
@@ -155,6 +159,9 @@ int start_server(int PORT_NUMBER) {
 
     pthread_join(ard_t, NULL);              // join thread that handles Arduino behavior
 
+    // free() quit
+    free(quit);
+    
     // free() pack
     free(pack);
 
@@ -173,7 +180,10 @@ int start_server(int PORT_NUMBER) {
  */
 void* close_server(void* p) {
 
-    quit = '\0';            // intialize quit
+    packet* pack = (packet*) p;
+    char* quit = pack->quit_ptr;
+
+    *quit = '\0';            // intialize quit
 
     /** preparing the select() for stdin */
 
@@ -196,7 +206,7 @@ void* close_server(void* p) {
     sret = select(8, &readfds, NULL, NULL, &timeout);
     if (sret != 0) {
       printf("pressed q\n");
-        quit = getchar();
+       *quit = getchar();
     }
 
     // exit
@@ -214,6 +224,7 @@ void* handle_connection(void* p) {
     struct sockaddr_in client_addr = pack->client_addr;
     int fd                         = pack->fd;
     int ard_fd                     = pack->ard_fd;
+    pthread_mutex_t* lock           = pack->lock;
 
     printf("Server got a connection from (%s, %d)\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
@@ -283,7 +294,8 @@ void* handle_connection(void* p) {
     if (is_get(request) == 1) {
       char* post = get_post(request);
       char c = parse_post(post);
-      printf("\n\n%c\n\n\n", c);
+      sleep(3);
+      printf("%d\n", pack->ard_fd);
       // if (c == 'r') {
       //   printf("Making it red\n");
       //   write_to_arduino(pack->ard_fd, 'r');
@@ -296,7 +308,12 @@ void* handle_connection(void* p) {
       //   printf("making it blue\n");
       //   write_to_arduino(pack->ard_fd, 'b');
       // }
+
+      printf("here we are\n");
+      pthread_mutex_lock(lock);
       write_to_arduino(pack->ard_fd, c);
+      pthread_mutex_unlock(lock);
+      sleep(3);
     }
     
     free(reply);

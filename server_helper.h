@@ -23,6 +23,7 @@ struct Packet
     int ard_fd;
     char* filename;
     char* quit_ptr;
+    pthread_mutex_t* lock;
 };
 
 void* handle_connection(void* p);
