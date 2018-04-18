@@ -142,23 +142,27 @@ void* get_temps(void* p) {
 
       printf("Arduino is not connected. Will try to connect\n");
       // try the first port option
+      pthread_mutex_lock(lock);
       int temp = get_started("/dev/ttyACM0");
       if (is_open) {
         // reset filename and ard_fd
-        filename     = "/dev/ttyACM0";
-        ard_fd       = temp;
-        pack->ard_fd = ard_fd;
+        filename       = "/dev/ttyACM0";
+        ard_fd         = temp;
+        pack->ard_fd   = ard_fd;
+        pack->filename = filename;
       }
       // otherwise, try second
       if (!is_open) {
         temp = get_started("/dev/ttyACM1");
         if (is_open) {
           // reset filename and ard_fd
-          filename     = "/dev/ttyACM1";
-          ard_fd       = temp;
-          pack->ard_fd = ard_fd;
+          filename       = "/dev/ttyACM1";
+          ard_fd         = temp;
+          pack->ard_fd   = ard_fd;
+          pack->filename = filename;
         }
       }
+      pthread_mutex_unlock(lock);
       if (!is_open) {
         sleep(5);
       }
