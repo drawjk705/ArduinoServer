@@ -21,11 +21,9 @@ struct Packet
 {
     struct sockaddr_in client_addr;
     int fd;
-    int ard_fd;
-    char* filename;
-    char* quit_ptr;
+    int quit_flag;
+    int is_Celsius;
     pthread_mutex_t* lock;
-    char* temp_type;
     char ctrl_signal;
 };
 

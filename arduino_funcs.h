@@ -21,9 +21,9 @@ int check_if_open(int fd);
 
 int get_started(char* file_name);
 
-void* get_temps(void* p);
+void* handle_arduino(void* p);
 
-char* read_data(char* file_name, int fd);
+char* read_data(char* file_name, int fd, pthread_mutex_t* lock);
 
 void write_temp_to_file(float* temp);
 

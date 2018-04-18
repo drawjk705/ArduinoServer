@@ -99,29 +99,23 @@ int start_server(int PORT_NUMBER) {
     // create a packet with relevant data
 
     packet* pack      = malloc(sizeof(packet));
-    pack->filename    = filename;
+    // pack->filename    = filename;
     // pack->ard_fd      = ard_fd;
-    pack->quit_ptr    = quit;
+    pack->quit_flag   = 0;
     pack->lock        = &lock;
-    pack->temp_type   = "C";
+    pack->is_Celsius  = 1;
     pack->ctrl_signal = '\0';
 
-    // pthread_t ard_t;
-    // pthread_create(&ard_t, NULL, &get_temps, pack);
+    pthread_t ard_t;
+    pthread_create(&ard_t, NULL, &handle_arduino, pack);
+
+    pthread_t close_s;
+    pthread_create(&close_s, NULL, &close_server, pack);
 
 
     // keep on accepting requests as long as
     // haven't received command to close server
-    while (*quit != 'q') {
-
-      pthread_t close_s;
-      pthread_create(&close_s, NULL, &close_server, pack);
-
-      // if (check_if_open(pack->ard_fd) == 0) {
-      //   printf("Arduino has been disconnected\n");
-      // } else {
-      //   printf("Arduino is connected\n");
-      // }
+    while (!pack->quit_flag) {
 
       /******** set up select() for accept()ing HTML requests ********/
       int sret;                     // to get return value from select()
@@ -138,7 +132,6 @@ int start_server(int PORT_NUMBER) {
           perror("sret < 0 server");
           exit(errno);
       }
-
 
       // if have received an HTTP request...
       if (sret != 0) {
@@ -158,11 +151,11 @@ int start_server(int PORT_NUMBER) {
         }
       }
 
-      pthread_join(close_s, NULL);      // join close thread
-
     }
 
-    // pthread_join(ard_t, NULL);              // join thread that handles Arduino behavior
+    pthread_join(close_s, NULL);      // join close thread
+
+    pthread_join(ard_t, NULL);              // join thread that handles Arduino behavior
 
     // free() quit
     free(quit);
@@ -186,40 +179,35 @@ int start_server(int PORT_NUMBER) {
 void* close_server(void* p) {
 
     packet* pack          = (packet*) p;
-    char* quit            = pack->quit_ptr;
     pthread_mutex_t* lock = pack->lock;
 
     pthread_mutex_lock(lock);
-    *quit = '\0';                 // intialize quit
-
-    int fd = 0;
-    int sret;                     // to get return value from select()
-    fd_set readfds;               // bit array to represent fds
-    struct timeval timeout;       // struct to determine how long to wait before timeout
-    FD_ZERO(&readfds);            // zero out bit array
-    FD_SET(fd, &readfds);         // set bit array
-    timeout.tv_sec = 1;           // set timeout time
-    timeout.tv_usec = 0;
-    /***************************************************************/
-
-    sret = select(8, &readfds, NULL, NULL, &timeout);     // run the select()
     pthread_mutex_unlock(lock);
-    
-    if (sret == 0) {
-      printf("time out\n");
-    }
-    else if (sret < 0) {
-      perror("sret < 0");
-      exit(errno);
-    }
-    else {
-      *quit = getchar();
-      if (*quit == 'q') {
-        printf("pressed q\n");
+
+    int flags = fcntl(STDIN_FILENO, F_GETFL);
+    fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+
+    char buf[10];
+    buf[0] = '\0';
+    while (buf[0] != 'q') {
+      // pthread_mutex_lock(lock);
+      // scanf("%s", buf);
+      int bytes_read = read(STDIN_FILENO, buf, sizeof(buf) - 1);
+      // pthread_mutex_unlock(lock);
+      
+      if (bytes_read > 0) {
+        buf[bytes_read] = '\0';
+        printf("\n\n%d bytes read: typed %s\n\n", bytes_read, buf);
       } else {
-        *quit = '\0';
+        printf("timed out\n");
       }
+      sleep(2);
     }
+
+    pthread_mutex_lock(lock);
+    pack->quit_flag = 1;
+    pthread_mutex_unlock(lock);
+
     pthread_exit(NULL);
 }
 

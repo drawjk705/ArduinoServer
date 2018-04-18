@@ -28,7 +28,6 @@ int is_get(char* request) {
             type[i] = request[i];
         }
     }
-
     if (strcmp(type, "GET") == 0) {
         return 0;
     } else if (strcmp(type, "POST") == 0) {
