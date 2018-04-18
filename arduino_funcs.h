@@ -23,15 +23,7 @@ int get_started(char* file_name);
 
 void* get_temps(void* p);
 
-float get_avg_temp(void* l);
-
-float get_max_temp(void* l);
-
-float get_min_temp(void* l);
-
-float* read_temp(char* file_name, int fd);
-
-float* strip_letters(char* str);
+char* read_data(char* file_name, int fd);
 
 void write_temp_to_file(float* temp);
 

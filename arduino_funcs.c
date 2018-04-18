@@ -73,13 +73,17 @@ void* get_temps(void* p) {
 
     // if connection to Arduino is open
     if (is_open) {
+      if (pack->ctrl_signal != '\0') {
+        write_to_arduino(ard_fd, pack->ctrl_signal);
+        pack->ctrl_signal = '\0';
+      }
       if (strcmp(pack->temp_type, "C") == 0) {
         replace_head(d, "C");
       } else {
         replace_head(d, "F");
       }
       pthread_mutex_lock(lock);
-      float* f = read_temp(filename, ard_fd);
+      char* f_temporary = read_data(filename, ard_fd);
       pthread_mutex_unlock(lock);
       
       /**** write temperature to file ****/
@@ -92,10 +96,10 @@ void* get_temps(void* p) {
 
       char str_temp[20];
       // convert temperature to string
-      if (f != NULL) {
+      if (f_temporary != NULL) {
         // str_temp = num_to_string(f);
-        sprintf(str_temp, "%f", *f);
-        free(f);
+        strcpy(str_temp, f_temporary);
+        free(f_temporary);
       }
       else {
         strcpy(str_temp, "OFFLINE");
@@ -181,9 +185,9 @@ void* get_temps(void* p) {
  * @param  fd        file descriptor
  * @return           the temperature as a float, without any surrounding text
  */
-float* read_temp(char* file_name, int fd) {
+char* read_data(char* file_name, int fd) {
   
-  char out[100]; // what output will be
+  char* out = malloc(sizeof(char) * 100); // what output will be
   int index = 0; // index to keep track of location in out[]
 
   char buf[100]; // buffer to read in data
@@ -199,6 +203,7 @@ float* read_temp(char* file_name, int fd) {
       if (zero_count == 20) {
         printf("Arduino has been disconnected\n");
         is_open = 0;
+        free(out);
         return NULL;
       }
 
@@ -218,48 +223,45 @@ float* read_temp(char* file_name, int fd) {
       }
   }
 
-  float* f = malloc(sizeof(float));
-  *f = atof(out);
+  // float f = atof(out);
 
   // float* f = strip_letters(out);
-  printf("%f\n", *f);
+  printf("%s\n", out);
 
-  return f;
-
-
+  return out;
 }
 
-/**
- * strip letters from the Arduino message
- * @param  str the Arduino message
- * @return     solely the temperature (as a float)
- */
-float* strip_letters(char* str) {
+// /**
+//  * strip letters from the Arduino message
+//  * @param  str the Arduino message
+//  * @return     solely the temperature (as a float)
+//  */
+// float* strip_letters(char* str) {
 
-  float* f = malloc(sizeof(float));
+//   float* f = malloc(sizeof(float));
 
-  char out[10];
-  int at_num = 0;
-  int index = 0;
+//   char out[10];
+//   int at_num = 0;
+//   int index = 0;
 
-  for (int i = 0; i < strlen(str); i++) {
-    // anything that's a number or decimal
-    if ((str[i] >= '0' && str[i] <= '9') || str[i] == '.') {
-        out[index++] = str[i];
-        at_num = 1;
-        if (index == 9) {
-          break;
-        }
-    } else if (at_num != 0) {
-      break;
-    }
-  }
-  out[index] = '\0';      // null terminate
+//   for (int i = 0; i < strlen(str); i++) {
+//     // anything that's a number or decimal
+//     if ((str[i] >= '0' && str[i] <= '9') || str[i] == '.') {
+//         out[index++] = str[i];
+//         at_num = 1;
+//         if (index == 9) {
+//           break;
+//         }
+//     } else if (at_num != 0) {
+//       break;
+//     }
+//   }
+//   out[index] = '\0';      // null terminate
 
-  *f = atof(out);
+//   *f = atof(out);
 
-  return f;
-}
+//   return f;
+// }
 
 /**
  * send message to Arduino
@@ -271,9 +273,18 @@ void write_to_arduino(int fd, char c) {
     printf("Arduino is not open for writing\n");
     return;
   }
+
   if (write(fd, &c, sizeof(char)) != sizeof(char)) {
     perror("Could not write to Arduino");
     exit(1);
   }
+  // }
+  // char* result = read_data(filename, fd);
+  // while (strcmp(result, "r") != 0) {
+  //   free(result);
+  //   write(fd, &c, sizeof(char));
+  //   result = read_data(filename, fd);
+  // }
+  // free(result);
   printf("\n\n\twriting %c to Arduino\n", c);
 }

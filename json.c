@@ -275,7 +275,6 @@ void clear_dictionary(dict* d) {
     prev = trav;
     trav = trav->next;
     void* key = ((kvp*)prev->value)->key;
-    printf("%s\n", key);
     free(key);
     free(prev->value);
     free(prev);

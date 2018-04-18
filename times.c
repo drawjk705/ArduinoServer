@@ -9,7 +9,7 @@ char* get_current_time() {
     strcpy(out, ctime(&t));
 
     strip_fat(out);
-    // printf("%s\n", out);
+    printf("%s\n", out);
 
     return out;
 }

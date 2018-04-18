@@ -98,12 +98,13 @@ int start_server(int PORT_NUMBER) {
 
     // create a packet with relevant data
 
-    packet* pack    = malloc(sizeof(packet));
-    pack->filename  = filename;
-    pack->ard_fd    = ard_fd;
-    pack->quit_ptr  = quit;
-    pack->lock      = &lock;
-    pack->temp_type = "C";
+    packet* pack      = malloc(sizeof(packet));
+    pack->filename    = filename;
+    pack->ard_fd      = ard_fd;
+    pack->quit_ptr    = quit;
+    pack->lock        = &lock;
+    pack->temp_type   = "C";
+    pack->ctrl_signal = '\0';
 
     pthread_t ard_t;
 
@@ -295,40 +296,41 @@ void* handle_connection(void* p) {
     if (is_get(request) == 1) {
       char* post = get_post(request);
       char c = parse_post(post);
-      sleep(3);
-      printf("%d\n", pack->ard_fd);
-      pthread_mutex_lock(lock);
-      if (c == 'r') {
-        printf("Making it red\n");
-        write_to_arduino(pack->ard_fd, 'r');
-      } 
-      if (c == 'g') {
-        printf("making it green\n");
-        write_to_arduino(pack->ard_fd, 'g');
-      }
-      if (c == 'b') {
-        printf("making it blue\n");
-        write_to_arduino(pack->ard_fd, 'b');
-      }
-      if (c == 'c') {
-        printf("making it blue\n");
-        write_to_arduino(pack->ard_fd, 'f');
-        pack->temp_type = "C";
-      }
-      if (c == 'f') {
-        printf("making it blue\n");
-        write_to_arduino(pack->ard_fd, 'f');
-        pack->temp_type = "F";
-      }
-      if (c == 'l') {
-        printf("laughter\n");
-        write_to_arduino(pack->ard_fd, 'l');
-      }
-      if (c == 's') {
-        printf("help\n");
-        write_to_arduino(pack->ard_fd, 's');
-      }
-      pthread_mutex_unlock(lock);
+      pack->ctrl_signal = c;
+      // sleep(3);
+      // printf("%d\n", pack->ard_fd);
+      // pthread_mutex_lock(lock);
+      // if (c == 'r') {
+      //   printf("Making it red\n");
+      //   write_to_arduino(pack->ard_fd, 'r');
+      // } 
+      // if (c == 'g') {
+      //   printf("making it green\n");
+      //   write_to_arduino(pack->ard_fd, 'g');
+      // }
+      // if (c == 'b') {
+      //   printf("making it blue\n");
+      //   write_to_arduino(pack->ard_fd, 'b');
+      // }
+      // if (c == 'c') {
+      //   printf("making it blue\n");
+      //   write_to_arduino(pack->ard_fd, 'f');
+      //   pack->temp_type = "C";
+      // }
+      // if (c == 'f') {
+      //   printf("making it blue\n");
+      //   write_to_arduino(pack->ard_fd, 'f');
+      //   pack->temp_type = "F";
+      // }
+      // if (c == 'l') {
+      //   printf("laughter\n");
+      //   write_to_arduino(pack->ard_fd, 'l');
+      // }
+      // if (c == 's') {
+      //   printf("help\n");
+      //   write_to_arduino(pack->ard_fd, 's');
+      // }
+      // pthread_mutex_unlock(lock);
       
       sleep(3);
     }

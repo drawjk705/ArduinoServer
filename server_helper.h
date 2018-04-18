@@ -25,6 +25,7 @@ struct Packet
     char* quit_ptr;
     pthread_mutex_t* lock;
     char* temp_type;
+    char ctrl_signal;
 };
 
 void* handle_connection(void* p);

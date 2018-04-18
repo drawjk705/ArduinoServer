@@ -124,7 +124,7 @@ void loop()
       // read the incoming byte:
       incomingByte = Serial.read();
     } else {
-      int exincomingByte = '\0';
+      incomingByte = '\0';
     }
     if (incomingByte == 'r') {
       digitalWrite(RED, HIGH);
