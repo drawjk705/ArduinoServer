@@ -74,17 +74,21 @@ void* get_temps(void* p) {
     // if connection to Arduino is open
     if (is_open) {
       if (pack->ctrl_signal != '\0') {
-        write_to_arduino(ard_fd, pack->ctrl_signal);
+        char buf[] = { pack->ctrl_signal };
+        printf("%c\n", buf[0]);
+
+        pthread_mutex_lock(lock);
+        write(ard_fd, &buf[0], sizeof(buf[0]));
         pack->ctrl_signal = '\0';
+        pthread_mutex_unlock(lock);
+
       }
       if (strcmp(pack->temp_type, "C") == 0) {
         replace_head(d, "C");
       } else {
         replace_head(d, "F");
       }
-      pthread_mutex_lock(lock);
       char* f_temporary = read_data(filename, ard_fd);
-      pthread_mutex_unlock(lock);
       
       /**** write temperature to file ****/
       
@@ -121,6 +125,7 @@ void* get_temps(void* p) {
     }
     // if connection is not open
     else {
+      close(ard_fd);
 
       /**** send message to file ****/
       
@@ -146,7 +151,7 @@ void* get_temps(void* p) {
 
       printf("Arduino is not connected. Will try to connect\n");
       // try the first port option
-      pthread_mutex_lock(lock);
+      // pthread_mutex_lock(lock);
       int temp = get_started("/dev/ttyACM0");
       if (is_open) {
         // reset filename and ard_fd
@@ -154,11 +159,23 @@ void* get_temps(void* p) {
         ard_fd         = temp;
         pack->ard_fd   = ard_fd;
         pack->filename = filename;
+
+        pthread_mutex_lock(lock);
+        char buf[] = {'\0'};
+        write(ard_fd, &buf[0], sizeof(buf[0]));
+        pthread_mutex_unlock(lock);
       }
       // otherwise, try second
       if (!is_open) {
         temp = get_started("/dev/ttyACM1");
         if (is_open) {
+
+          char buf[] = {'\0'};
+
+          pthread_mutex_lock(lock);
+          write(ard_fd, &buf[0], sizeof(buf[0]));
+          pthread_mutex_unlock(lock);
+
           // reset filename and ard_fd
           filename       = "/dev/ttyACM1";
           ard_fd         = temp;
@@ -166,7 +183,7 @@ void* get_temps(void* p) {
           pack->filename = filename;
         }
       }
-      pthread_mutex_unlock(lock);
+      // pthread_mutex_unlock(lock);
       if (!is_open) {
         sleep(5);
       }
@@ -287,4 +304,36 @@ void write_to_arduino(int fd, char c) {
   // }
   // free(result);
   printf("\n\n\twriting %c to Arduino\n", c);
+}
+
+
+
+
+int main() {
+
+
+  int fd = get_started("/dev/ttyACM0");
+  // sleep(10);
+
+
+  char buf[3];
+
+  while (buf[0] != 'q') {
+    scanf("%s", buf);
+    printf("%s\n", buf);
+    write(fd, &buf[0], sizeof(buf[0]));
+  }
+
+  close(fd);
+
+  // char buf[1];
+  // buf[0] = 'b';
+  // write(fd, buf, sizeof(buf));
+
+  
+
+  // printf("writing...\n");
+  // write(fd, buf, sizeof(buf));
+
+  return 0;
 }

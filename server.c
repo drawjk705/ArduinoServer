@@ -90,6 +90,7 @@ int start_server(int PORT_NUMBER) {
     // set quit flag to '\0'
     *quit = '\0';
 
+
     // retrieve file descriptor from Arduino
     int ard_fd = get_started(filename);
 
@@ -182,10 +183,13 @@ int start_server(int PORT_NUMBER) {
  */
 void* close_server(void* p) {
 
-    packet* pack = (packet*) p;
-    char* quit = pack->quit_ptr;
+    packet* pack          = (packet*) p;
+    char* quit            = pack->quit_ptr;
+    pthread_mutex_t* lock = pack->lock;
 
+    pthread_mutex_lock(lock);
     *quit = '\0';            // intialize quit
+    pthread_mutex_unlock(lock);
 
     /** preparing the select() for stdin */
 
@@ -204,12 +208,20 @@ void* close_server(void* p) {
     timeout.tv_sec = 1;     // set timeout time
     timeout.tv_usec = 0;
 
+    pthread_mutex_lock(lock);
     // run the select
     sret = select(8, &readfds, NULL, NULL, &timeout);
     if (sret != 0) {
-      printf("pressed q\n");
-       *quit = getchar();
+      printf("pressed key\n");
+      *quit = getchar();
+      if (*quit != 'q') {
+        *quit = '\0';
+      }
+      else {
+        printf("pressed q\n");
+      }
     }
+    pthread_mutex_unlock(lock);
 
     // exit
     pthread_exit(NULL);
@@ -296,7 +308,9 @@ void* handle_connection(void* p) {
     if (is_get(request) == 1) {
       char* post = get_post(request);
       char c = parse_post(post);
+      pthread_mutex_lock(lock);
       pack->ctrl_signal = c;
+      pthread_mutex_unlock(lock);
       // sleep(3);
       // printf("%d\n", pack->ard_fd);
       // pthread_mutex_lock(lock);
@@ -332,7 +346,7 @@ void* handle_connection(void* p) {
       // }
       // pthread_mutex_unlock(lock);
       
-      sleep(3);
+      // sleep(3);
     }
     
     free(reply);

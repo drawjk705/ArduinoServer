@@ -115,7 +115,7 @@ void loop()
     delay (250);
   }
 
-  int incomingByte = 'c';
+  char incomingByte = 'c';
   int isCelcius = 1;
   
   while (1)
@@ -127,6 +127,7 @@ void loop()
       incomingByte = '\0';
     }
     if (incomingByte == 'r') {
+//      Serial.write("RED");
       digitalWrite(RED, HIGH);
       digitalWrite(GREEN, LOW);
       digitalWrite(BLUE, LOW);
@@ -150,6 +151,7 @@ void loop()
       incomingByte = '\0';
     }
     else if (incomingByte == 'g') {
+//      Serial.write("GREEN");
       digitalWrite(RED, LOW);
       digitalWrite(GREEN, HIGH);
       digitalWrite(BLUE, LOW);
@@ -157,6 +159,7 @@ void loop()
       incomingByte = '\0';
     }
     else if (incomingByte == 'b') {
+//      Serial.write("BLUE");
       digitalWrite(RED, LOW);
       digitalWrite(GREEN, LOW);
       digitalWrite(BLUE, HIGH);
@@ -448,6 +451,7 @@ void LOL ()
   Send7SEG(4,0x38);         /* Display "L"  */
   Send7SEG(3,0x3F);
   Send7SEG(2,0x38);
+  Send7SEG(1,0x00);
 }
 
 /***************************************************************************
@@ -462,6 +466,7 @@ void SOS ()
   Send7SEG(4,0x6D);         /* Display "S"  */
   Send7SEG(3,0x3F);
   Send7SEG(2,0x6D);
+  Send7SEG(1,0x00);
 }
 
 /***************************************************************************
