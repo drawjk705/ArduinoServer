@@ -1,5 +1,31 @@
 #include "json.h"
 
+dict* create_dict() {
+  dict* d = malloc(sizeof(dict));
+  kvp* head = make_pair("Temp", "C");
+  d->head = malloc(sizeof(node*));
+  d->head->value = head;
+
+  return d;
+}
+
+int replace_head(dict* d, char* temp) {
+  
+  if (d == NULL || d->head == NULL) {
+    return -1;
+  }
+
+  kvp* new_head = make_pair("Temp", temp);
+
+  kvp* old_head = d->head->value;
+
+  free(old_head);
+
+  d->head->value = new_head;
+
+  return 0;
+}
+
 /**
  * add to dictionary -- which is essentially a linked list
  * @param  p key-value pait to add
@@ -233,81 +259,12 @@ void clear_dictionary(dict* d) {
   node* prev;
 
   while (trav != NULL) {
-    // free(((kvp*)trav->value)->key);
-    free(((kvp*)trav->value)->value);
+    // free(((kvp*)trav->value)->value);
     prev = trav;
     trav = trav->next;
+    free(((kvp*)prev->value)->key);
+    free(prev->value);
     free(prev);
   }
   free(d);
-}
-
-
-/**
- * simple (doesn't cover all cases) way to convert number
- * (either an int or a float) to a string
- * @param  num the number to convert
- * @return     string representation of that number
- */
-char* num_to_string(void* num) {
-
-  // flag to check if the number is an int vs. a float
-  int is_int = 0;
-
-  // count of digits before the decimal point
-  int before_dec = 0;
-
-  // try to cast to float to int
-  int temp = *(float*) num;
-  if (temp == 0) {
-    // if the cast fails, the number is an int
-    temp = *(int*) num;
-    is_int = 1;
-  }
-
-  // count digits before decimal
-  while (temp > 0) {
-    temp /= 10;
-    before_dec++;
-  }
-
-  // count digits following decimal
-  int after_dec = 0;
-  float temp2 = *(float*) num;
-  while (((int) temp2 % 10) != 0) {
-    temp2 *= 10;
-    after_dec++;
-  }
-  
-  // get full number length
-  int num_len = before_dec + after_dec + 1;
-
-  // make string
-  char* dest = malloc(sizeof(char) * (num_len + 1));
-
-  // get the full non-float representation of the number
-  // i.e., no decimal
-  int full_num = 0;
-  if (!is_int) {
-    full_num = (int) temp2;
-  }
-  else {
-    full_num = *(int*) num;
-  }
-  // insert digits backwards (from 1s to higher places)
-  dest[num_len] = '\0';
-  for (int i = num_len - 1; i >= 0; i--) {
-    if (i == before_dec) {
-      if (!is_int) {
-        dest[i] = '.';
-      }
-    } else {
-      int val = full_num % 10;
-      dest[i] = '0' + val;
-      full_num /= 10;
-    }
-  }
-  dest[num_len] = '\0';
-
-  return dest;
 }

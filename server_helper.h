@@ -24,6 +24,7 @@ struct Packet
     char* filename;
     char* quit_ptr;
     pthread_mutex_t* lock;
+    char* temp_type;
 };
 
 void* handle_connection(void* p);

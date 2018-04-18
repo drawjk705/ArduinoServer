@@ -22,6 +22,8 @@ struct KVPair {
     void* value;
 };
 
+dict* create_dict();
+int replace_head(dict* d, char* temp);
 int add_to_dict(kvp* p, dict* d);
 char* dict_to_string(dict* d);
 int write_to_json(char* filename, dict* d);

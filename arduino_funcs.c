@@ -57,7 +57,7 @@ void* get_temps(void* p) {
   // int ard_fd;
   // is_open = 0;
 
-  dict* d = malloc(sizeof(dict));
+  dict* d = create_dict();
 
   printf("In gettemps\n");
 
@@ -70,6 +70,12 @@ void* get_temps(void* p) {
   pthread_mutex_t* lock = pack->lock;
 
   while (*quit != 'q') {
+
+    if (strcmp(pack->temp_type, "C") == 0) {
+      replace_head(d, "C");
+    } else {
+      replace_head(d, "F");
+    }
     
     printf("\t\t\t%d\n", ard_fd);
 
@@ -82,17 +88,23 @@ void* get_temps(void* p) {
       /**** write temperature to file ****/
       
       // get current time
-      char* curr_time = get_current_time();
-      strip_fat(curr_time);
+      char* curr_time = malloc(sizeof(char) * 10);
+      strcpy(curr_time, get_current_time());
+      // strip_fat(curr_time);
+      printf("%s\n", curr_time);
 
-      char* str_temp;
+      char str_temp[20];
       // convert temperature to string
       if (f != NULL) {
-        str_temp = num_to_string(f);
+        // str_temp = num_to_string(f);
+        sprintf(str_temp, "%f", *f);
+        free(f);
       }
       else {
-        str_temp = "OFFLINE";
+        strcpy(str_temp, "OFFLINE");
       }
+
+      printf("%s\n", str_temp);
 
       // create key-value pair of the 2
       kvp* k = make_pair(curr_time, str_temp);
@@ -105,7 +117,6 @@ void* get_temps(void* p) {
 
       // free(f);
       printf("completed readings\n");
-      sleep(2);
     }
     // if connection is not open
     else {
@@ -117,11 +128,12 @@ void* get_temps(void* p) {
       strip_fat(curr_time);
 
       // send offline message
-      char* message = malloc(sizeof(char) * (strlen("OFFLINE") + 1));
-      strcpy(message, "OFFLINE");
+      char* message = "OFFLINE";
+      // strcpy(message, "OFFLINE");
 
       // create key-value pair of the 2
       kvp* k = make_pair(curr_time, message);
+      // free(message);
 
       // add to dictionary
       add_to_dict(k, d);
@@ -154,6 +166,7 @@ void* get_temps(void* p) {
         sleep(5);
       }
     }
+    sleep(2);
   }
 
   clear_dictionary(d);

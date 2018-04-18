@@ -8,7 +8,7 @@ char* get_current_time() {
     char* out = ctime(&t);
 
     strip_fat(out);
-    printf("%s\n", out);
+    // printf("%s\n", out);
 
     return out;
 }
