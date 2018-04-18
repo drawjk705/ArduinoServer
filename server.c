@@ -90,43 +90,38 @@ int start_server(int PORT_NUMBER) {
     // set quit flag to '\0'
     *quit = '\0';
 
-
     // retrieve file descriptor from Arduino
-    int ard_fd = get_started(filename);
+    // int ard_fd = get_started(filename);
 
     // write initial null char to Arduino to clear out
-    write_to_arduino(ard_fd, '\0');
+    // write_to_arduino(ard_fd, '\0');
 
     // create a packet with relevant data
 
     packet* pack      = malloc(sizeof(packet));
     pack->filename    = filename;
-    pack->ard_fd      = ard_fd;
+    // pack->ard_fd      = ard_fd;
     pack->quit_ptr    = quit;
     pack->lock        = &lock;
     pack->temp_type   = "C";
     pack->ctrl_signal = '\0';
 
-    pthread_t ard_t;
+    // pthread_t ard_t;
+    // pthread_create(&ard_t, NULL, &get_temps, pack);
 
-    pthread_create(&ard_t, NULL, &get_temps, pack);
 
     // keep on accepting requests as long as
     // haven't received command to close server
     while (*quit != 'q') {
+
+      pthread_t close_s;
+      pthread_create(&close_s, NULL, &close_server, pack);
 
       // if (check_if_open(pack->ard_fd) == 0) {
       //   printf("Arduino has been disconnected\n");
       // } else {
       //   printf("Arduino is connected\n");
       // }
-
-      /**** create close_server thread ****/
-          
-          pthread_t close;
-          pthread_create(&close, NULL, &close_server, pack);
-
-      /************************************/
 
       /******** set up select() for accept()ing HTML requests ********/
       int sret;                     // to get return value from select()
@@ -139,6 +134,11 @@ int start_server(int PORT_NUMBER) {
       /***************************************************************/
 
       sret = select(8, &readfds, NULL, NULL, &timeout);     // run the select()
+      if (sret < 0) {
+          perror("sret < 0 server");
+          exit(errno);
+      }
+
 
       // if have received an HTTP request...
       if (sret != 0) {
@@ -157,10 +157,12 @@ int start_server(int PORT_NUMBER) {
           pthread_join(req, NULL);          // join request thread
         }
       }
-      pthread_join(close, NULL);            // join close thread
+
+      pthread_join(close_s, NULL);      // join close thread
+
     }
 
-    pthread_join(ard_t, NULL);              // join thread that handles Arduino behavior
+    // pthread_join(ard_t, NULL);              // join thread that handles Arduino behavior
 
     // free() quit
     free(quit);
@@ -188,42 +190,36 @@ void* close_server(void* p) {
     pthread_mutex_t* lock = pack->lock;
 
     pthread_mutex_lock(lock);
-    *quit = '\0';            // intialize quit
-    pthread_mutex_unlock(lock);
+    *quit = '\0';                 // intialize quit
 
-    /** preparing the select() for stdin */
-
-    int fd = 0;             // create file descriptor
-
-    int sret;               // to get return value from select()
-    
-    fd_set readfds;         // bit array to represent fds
-
-    struct timeval timeout; // struct to determine how long to wait before timeout
-
-    FD_ZERO(&readfds);      // zero out bit array
-
-    FD_SET(fd, &readfds);   // set bit array
-
-    timeout.tv_sec = 1;     // set timeout time
+    int fd = 0;
+    int sret;                     // to get return value from select()
+    fd_set readfds;               // bit array to represent fds
+    struct timeval timeout;       // struct to determine how long to wait before timeout
+    FD_ZERO(&readfds);            // zero out bit array
+    FD_SET(fd, &readfds);         // set bit array
+    timeout.tv_sec = 1;           // set timeout time
     timeout.tv_usec = 0;
+    /***************************************************************/
 
-    pthread_mutex_lock(lock);
-    // run the select
-    sret = select(8, &readfds, NULL, NULL, &timeout);
-    if (sret != 0) {
-      printf("pressed key\n");
+    sret = select(8, &readfds, NULL, NULL, &timeout);     // run the select()
+    pthread_mutex_unlock(lock);
+    
+    if (sret == 0) {
+      printf("time out\n");
+    }
+    else if (sret < 0) {
+      perror("sret < 0");
+      exit(errno);
+    }
+    else {
       *quit = getchar();
-      if (*quit != 'q') {
+      if (*quit == 'q') {
+        printf("pressed q\n");
+      } else {
         *quit = '\0';
       }
-      else {
-        printf("pressed q\n");
-      }
     }
-    pthread_mutex_unlock(lock);
-
-    // exit
     pthread_exit(NULL);
 }
 
@@ -237,7 +233,7 @@ void* handle_connection(void* p) {
     packet* pack                   = (packet*) p;
     struct sockaddr_in client_addr = pack->client_addr;
     int fd                         = pack->fd;
-    int ard_fd                     = pack->ard_fd;
+    // int ard_fd                     = pack->ard_fd;
     pthread_mutex_t* lock          = pack->lock;
 
     printf("Server got a connection from (%s, %d)\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
@@ -311,42 +307,6 @@ void* handle_connection(void* p) {
       pthread_mutex_lock(lock);
       pack->ctrl_signal = c;
       pthread_mutex_unlock(lock);
-      // sleep(3);
-      // printf("%d\n", pack->ard_fd);
-      // pthread_mutex_lock(lock);
-      // if (c == 'r') {
-      //   printf("Making it red\n");
-      //   write_to_arduino(pack->ard_fd, 'r');
-      // } 
-      // if (c == 'g') {
-      //   printf("making it green\n");
-      //   write_to_arduino(pack->ard_fd, 'g');
-      // }
-      // if (c == 'b') {
-      //   printf("making it blue\n");
-      //   write_to_arduino(pack->ard_fd, 'b');
-      // }
-      // if (c == 'c') {
-      //   printf("making it blue\n");
-      //   write_to_arduino(pack->ard_fd, 'f');
-      //   pack->temp_type = "C";
-      // }
-      // if (c == 'f') {
-      //   printf("making it blue\n");
-      //   write_to_arduino(pack->ard_fd, 'f');
-      //   pack->temp_type = "F";
-      // }
-      // if (c == 'l') {
-      //   printf("laughter\n");
-      //   write_to_arduino(pack->ard_fd, 'l');
-      // }
-      // if (c == 's') {
-      //   printf("help\n");
-      //   write_to_arduino(pack->ard_fd, 's');
-      // }
-      // pthread_mutex_unlock(lock);
-      
-      // sleep(3);
     }
     
     free(reply);

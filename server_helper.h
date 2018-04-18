@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <string.h>
 #include <pthread.h>
+#include <poll.h>
 
 /**
  * struct to transfer data b/w threads

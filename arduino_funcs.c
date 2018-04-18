@@ -67,7 +67,11 @@ void* get_temps(void* p) {
   char* quit            = pack->quit_ptr;
   pthread_mutex_t* lock = pack->lock;
 
-  while (*quit != 'q') {
+  pthread_mutex_lock(lock);
+  char q = *quit;
+  pthread_mutex_unlock(lock);
+
+  while (q != 'q') {
     
     printf("\t\t\t%d\n", ard_fd);
 
@@ -189,6 +193,9 @@ void* get_temps(void* p) {
       }
     }
     sleep(2);
+    pthread_mutex_lock(lock);
+    q = *quit;
+    pthread_mutex_unlock(lock);
   }
 
   clear_dictionary(d);
@@ -197,7 +204,7 @@ void* get_temps(void* p) {
 }
 
 /**
- * funciton for single read of temperature from Arduino
+ * function for single read of temperature from Arduino
  * @param  file_name Arduino filename
  * @param  fd        file descriptor
  * @return           the temperature as a float, without any surrounding text
@@ -205,11 +212,11 @@ void* get_temps(void* p) {
 char* read_data(char* file_name, int fd) {
   
   char* out = malloc(sizeof(char) * 100); // what output will be
-  int index = 0; // index to keep track of location in out[]
+  int index = 0;                          // index to keep track of location in out[]
 
-  char buf[100]; // buffer to read in data
+  char buf[100];                          // buffer to read in data
 
-  int end = 0;   // flag to determine if are at end of message
+  int end = 0;                            // flag to determine if are at end of message
 
   // if have received a certain number of readings
   // with 0 bytes, arduino must have been disconnected
@@ -309,31 +316,31 @@ void write_to_arduino(int fd, char c) {
 
 
 
-int main() {
+// int main() {
 
 
-  int fd = get_started("/dev/ttyACM0");
-  // sleep(10);
+//   int fd = get_started("/dev/ttyACM0");
+//   // sleep(10);
 
 
-  char buf[3];
+//   char buf[3];
 
-  while (buf[0] != 'q') {
-    scanf("%s", buf);
-    printf("%s\n", buf);
-    write(fd, &buf[0], sizeof(buf[0]));
-  }
+//   while (buf[0] != 'q') {
+//     scanf("%s", buf);
+//     printf("%s\n", buf);
+//     write(fd, &buf[0], sizeof(buf[0]));
+//   }
 
-  close(fd);
+//   close(fd);
 
-  // char buf[1];
-  // buf[0] = 'b';
-  // write(fd, buf, sizeof(buf));
+//   // char buf[1];
+//   // buf[0] = 'b';
+//   // write(fd, buf, sizeof(buf));
 
   
 
-  // printf("writing...\n");
-  // write(fd, buf, sizeof(buf));
+//   // printf("writing...\n");
+//   // write(fd, buf, sizeof(buf));
 
-  return 0;
-}
+//   return 0;
+// }
