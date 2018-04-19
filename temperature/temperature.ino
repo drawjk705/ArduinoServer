@@ -116,22 +116,20 @@ void loop()
   }
 
   char incomingByte = 'x';
-  int isCelcius = 1;
+  int isCelsius = 1;
   int isStandby = 0;
   
   while (1)
   {
-//    if (Serial.available() > 0) {
-//      // read the incoming byte:
+      // read the incoming byte:
       incomingByte = (char) Serial.read();
-//    } else {
-//      incomingByte = '\0';
-//    }
+      
+      // flush out garbage input
       while (Serial.available() > 0) {
         Serial.read();  
       }
+    // reg light
     if (incomingByte == 'r') {
-//      Serial.write("RED");
       digitalWrite(RED, HIGH);
       digitalWrite(GREEN, LOW);
       digitalWrite(BLUE, LOW);
@@ -139,6 +137,7 @@ void loop()
       incomingByte = 'x';
 
     }
+    // standby
     else if (incomingByte == 'q'){
       isStandby = 1;
       Send7SEG(4,0x00);
@@ -149,49 +148,56 @@ void loop()
       digitalWrite(GREEN, LOW);
       digitalWrite(BLUE, LOW);
     }
+    // awaken
     else if (incomingByte == 'w'){
        digitalWrite(RED, LOW);
        digitalWrite(GREEN, LOW);
        digitalWrite(BLUE, LOW);
       isStandby = 0;
     }
+    // say "lol"
     else if (incomingByte == 'l'){
       LOL();
       delay (3000);     // delay for 3 seconds
       incomingByte = 'x';
     }
+    // say "sos"
     else if (incomingByte == 's'){
       SOS();
       delay (3000);     // delay for 3 seconds
       incomingByte = '\0';
     }
+    // say "[][]"
     else if (incomingByte == 'k'){
       brak();
       delay (1000);
       incomingByte = '\0';
     }
+    // green light
     else if (incomingByte == 'g') {
-//      Serial.write("GREEN");
       digitalWrite(RED, LOW);
       digitalWrite(GREEN, HIGH);
       digitalWrite(BLUE, LOW);
       delay (3000);     // delay for 3 seconds
       incomingByte = '\0';
     }
+    // blue light
     else if (incomingByte == 'b') {
-//      Serial.write("BLUE");
       digitalWrite(RED, LOW);
       digitalWrite(GREEN, LOW);
       digitalWrite(BLUE, HIGH);
       delay (3000);     // delay for 3 seconds
       incomingByte = '\0';
     }
+    // display celsius
     else if (incomingByte == 'c'){
-      isCelcius = 1;
+      isCelsius = 1;
     }
+    // display fahrenheidt
     else if (incomingByte == 'f') {
-      isCelcius = 0;
+      isCelsius = 0;
     }
+    // default
     else {
        digitalWrite(RED, LOW);
        digitalWrite(GREEN, LOW);
@@ -206,14 +212,13 @@ void loop()
     /* Display temperature on the serial monitor. 
     Comment out this line if you don't use serial monitor.*/
     SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
-      
-    if (isCelcius == 1) {
+    if (isCelsius == 1) {
       /* Display temperature on the 7-Segment */
       if (isStandby == 0) {
         Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive);
       }
     }
-    else if (isCelcius == 0) {
+    else if (isCelsius == 0) {
       Fah_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
       if (isStandby == 0) {
         Dis_7SEG_Fah (Decimal, Temperature_H, Temperature_L, IsPositive);
