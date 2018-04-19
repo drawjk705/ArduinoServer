@@ -151,3 +151,30 @@ char* read_data(char* file_name, int fd, pthread_mutex_t* lock) {
   
   return temp;
 }
+
+
+int main() {
+
+  int ard_fd = get_started("/dev/ttyACM0");
+  if (!is_open) {
+    ard_fd = get_started("/dev/ttyACM1");
+    if (is_open) {
+      // int filename = "dev/ttyACM1";
+    }
+  } else {
+    // filename = "dev/ttyACM0";
+  }
+
+  char buf[10];
+  int i = 0;
+  while (i < 10) {
+    read(STDIN_FILENO, &buf[i], sizeof(char));
+    if (i % 2 == 0) {
+      printf("writing %c to Arduino\n", buf[i]);
+      write(ard_fd, &buf[i++], sizeof(char));
+    }
+  }
+
+
+}
+

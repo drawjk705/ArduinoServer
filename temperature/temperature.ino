@@ -122,7 +122,7 @@ void loop()
   {
     if (Serial.available() > 0) {
       // read the incoming byte:
-      incomingByte = Serial.read();
+      incomingByte = (char) Serial.read();
     } else {
       incomingByte = '\0';
     }
