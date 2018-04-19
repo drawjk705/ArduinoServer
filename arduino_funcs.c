@@ -27,6 +27,7 @@ int get_started(char* filename) {
   if (ard_fd < 0) {
     close(ard_fd);
     is_open = 0;
+    printf("could not open\n");
     // perror("Could not open file\n");
     // exit(1);
     return -1;
@@ -63,8 +64,15 @@ void* handle_arduino(void* p) {
     if (is_open) {
 
       if (pack->ctrl_signal != '\0') {
-        printf("writing %c to arduino\n", pack->ctrl_signal);
-        write(ard_fd, &(pack->ctrl_signal), sizeof(char));
+        char sig[3];
+        sig[0] = pack->ctrl_signal;
+        sig[1] = '\n';
+        sig[2] = '\0';
+        printf("writing %s to arduino\n", sig);
+        write(ard_fd, sig, strlen(sig));
+        sleep(3);
+        strcpy(sig, "w\n");
+        write(ard_fd, sig, strlen(sig));
         pack->ctrl_signal = '\0';
       }
       if (pack->quit_flag) {
@@ -84,7 +92,7 @@ void* handle_arduino(void* p) {
       add_to_dict(k, d);
       write_to_json("output.json", d);
     }
-    else {
+    else if (!is_open) {
       printf("Arduino is offline\n");
       // try to open Arduino
       ard_fd = get_started("/dev/ttyACM0");
@@ -153,28 +161,40 @@ char* read_data(char* file_name, int fd, pthread_mutex_t* lock) {
 }
 
 
-int main() {
+// int main() {
 
-  int ard_fd = get_started("/dev/ttyACM0");
-  if (!is_open) {
-    ard_fd = get_started("/dev/ttyACM1");
-    if (is_open) {
-      // int filename = "dev/ttyACM1";
-    }
-  } else {
-    // filename = "dev/ttyACM0";
-  }
+//   int ard_fd = get_started("/dev/ttyACM0");
+//   if (!is_open) {
+//     ard_fd = get_started("/dev/ttyACM1");
+//     if (is_open) {
+//       // int filename = "dev/ttyACM1";
+//     }
+//   } else {
+//     // filename = "dev/ttyACM0";
+//   }
 
-  char buf[10];
-  int i = 0;
-  while (i < 10) {
-    read(STDIN_FILENO, &buf[i], sizeof(char));
-    if (i % 2 == 0) {
-      printf("writing %c to Arduino\n", buf[i]);
-      write(ard_fd, &buf[i++], sizeof(char));
-    }
-  }
+//   // char c = 'b';
+
+//   // sleep(5);
+
+//   // printf("writing %c\n", c);
+
+//   // write(ard_fd, &c, sizeof(char));
 
 
-}
+
+
+//   char buf[3];
+//   while (1) {
+//     int bytes_read = read(STDIN_FILENO, buf, (sizeof(buf) - 1));
+//     buf[bytes_read] = '\0';
+//     if (buf[0] == 'q') {
+//       break;
+//     }
+//     printf("read %d bytes, and wrote %s\n", bytes_read, buf);
+//     write(ard_fd, buf, strlen(buf));
+//   }
+//   close(ard_fd);
+
+// }
 

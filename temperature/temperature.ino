@@ -115,30 +115,50 @@ void loop()
     delay (250);
   }
 
-  char incomingByte = 'c';
+  char incomingByte = 'x';
   int isCelcius = 1;
+  int isStandby = 0;
   
   while (1)
   {
-    if (Serial.available() > 0) {
-      // read the incoming byte:
+//    if (Serial.available() > 0) {
+//      // read the incoming byte:
       incomingByte = (char) Serial.read();
-    } else {
-      incomingByte = '\0';
-    }
+//    } else {
+//      incomingByte = '\0';
+//    }
+      while (Serial.available() > 0) {
+        Serial.read();  
+      }
     if (incomingByte == 'r') {
 //      Serial.write("RED");
       digitalWrite(RED, HIGH);
       digitalWrite(GREEN, LOW);
       digitalWrite(BLUE, LOW);
       delay (3000);     // delay for 3 seconds
-      incomingByte = '\0';
+      incomingByte = 'x';
 
+    }
+    else if (incomingByte == 'q'){
+      isStandby = 1;
+      Send7SEG(4,0x00);
+      Send7SEG(3,0x00);
+      Send7SEG(2,0x00);
+      Send7SEG(1,0x00);
+      digitalWrite(RED, LOW);
+      digitalWrite(GREEN, LOW);
+      digitalWrite(BLUE, LOW);
+    }
+    else if (incomingByte == 'w'){
+       digitalWrite(RED, LOW);
+       digitalWrite(GREEN, LOW);
+       digitalWrite(BLUE, LOW);
+      isStandby = 0;
     }
     else if (incomingByte == 'l'){
       LOL();
       delay (3000);     // delay for 3 seconds
-      incomingByte = '\0';
+      incomingByte = 'x';
     }
     else if (incomingByte == 's'){
       SOS();
@@ -189,11 +209,15 @@ void loop()
       
     if (isCelcius == 1) {
       /* Display temperature on the 7-Segment */
-      Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive);
+      if (isStandby == 0) {
+        Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive);
+      }
     }
     else if (isCelcius == 0) {
       Fah_temp (Decimal, Temperature_H, Temperature_L, IsPositive);
-      Dis_7SEG_Fah (Decimal, Temperature_H, Temperature_L, IsPositive);
+      if (isStandby == 0) {
+        Dis_7SEG_Fah (Decimal, Temperature_H, Temperature_L, IsPositive);
+      }
     }
       
       
