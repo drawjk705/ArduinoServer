@@ -7,7 +7,7 @@
 </head>
 <body>
 
-    <p class="top">Welcome to our page</p>
+    <h1 class="top">Welcome to our page</h1>
     <!-- Table with interactive options -->
     <table>
         <!-- Headers -->
@@ -21,9 +21,13 @@
                 <th>
                     Select Tempetature Type
                 </th>
-                <!-- Something else -->
+                <!-- Display on Arduino -->
                 <th>
-                    Something else
+                    Select Words to Display on Arduino 
+                </th>
+                 <!-- Standby mode -->
+                 <th>
+                    Other 
                 </th>
             </tr>
         </thead>
@@ -38,20 +42,33 @@
                         <input type="submit" name="submit">
                     </form>
                 </td>
+                 <td>
+                    <form method="post">
+                        <input type="radio" name="c"> Celcius <br>
+                        <input type="radio" name="f"> Ferinheight <br>
+                        <input type="submit" name="submit">
+                    </form>
+                </td>
+                  <td>
+                    <form method="post">
+                        <input type="radio" name="l"> LOL <br>
+                        <input type="radio" name="s"> SOS <br>
+                        <input type="submit" name="submit">
+                    </form>
+                </td>
+                  <td>
+                    <form method="post">
+                        Standby Mode <br>
+                        <input type="submit" name="submit"> 
+                    </form>
+                </td>
             </tr>
         </tbody>
         <!-- Single buttons -->
         <tfoot>
             <tr>
-                <td>
-                    Enter standby
-                </td>
             </tr>
         </tfoot>
-
-
-
-
 
     </table>
 
@@ -72,6 +89,12 @@
                 text.innerHTML += 'hello<br>';
                 console.log('hello');
             }
+        
+            function CtoF(value) {
+                var x = getElementById("c").value * 9 / 5 + 32;
+                document.getElementById("f").value = Math.round(x);
+            }
+
         </script>        
     </p>
 

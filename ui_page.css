@@ -1,7 +1,29 @@
+body {
+    background-color: powderblue;
+}
+
+h1 {
+	font-size: 40px;
+    color: navy;
+}
+
+h2, th {
+	font-size: 30px;
+    color: blue;
+    
+}
+
+p, td {
+	font-size: 20px;
+    color: black;
+}
+
+
 table, th, td {
 
     border-collapse: collapse;
     border: 1px solid black;
+    text-align: center;
     /*padding: 15px;*/
 }
 
