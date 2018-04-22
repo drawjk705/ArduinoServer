@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<!-- <script src="jquery.js"></script> -->
+<script src="jquery.js"></script> 
 <head>
     <link rel="stylesheet" type="text/css" href="ui_page.css">
     <title>Our page</title>
@@ -8,6 +8,12 @@
 <body>
 
     <h1 class="top">Welcome to our page</h1>
+    <p id = "stats1"> </p>
+    <p id = 'stats2'> </p>
+    <p id = 'stats3'> </p>
+    <p id = 'stats4'> </p>
+    <button id = 'show'> Get Temperature </button>
+
     <!-- Table with interactive options -->
     <table>
         <!-- Headers -->
@@ -35,7 +41,8 @@
         <tbody>
             <tr>
                 <td>
-                    <form method="post">
+                     <!-- color -->
+                    <form method="post"> 
                         <input type="radio" name="red"> Red <br>
                         <input type="radio" name="blue"> Blue <br>
                         <input type="radio" name="green"> Green <br>
@@ -43,13 +50,15 @@
                     </form>
                 </td>
                  <td>
+                    <!-- temp format -->
                     <form method="post">
-                        <input type="radio" name="c"> Celcius <br>
-                        <input type="radio" name="f"> Ferinheight <br>
+                        <input type="radio" id="c" name="c"> Celcius <br>
+                        <input type="radio" id="f" name="f"> Ferinheight <br>
                         <input type="submit" name="submit">
                     </form>
                 </td>
                   <td>
+                    <!-- letter to dispplay -->
                     <form method="post">
                         <input type="radio" name="l"> LOL <br>
                         <input type="radio" name="s"> SOS <br>
@@ -57,6 +66,7 @@
                     </form>
                 </td>
                   <td>
+                    <!-- standby mode -->
                     <form method="post">
                         Standby Mode <br>
                         <input type="submit" name="submit"> 
@@ -64,36 +74,69 @@
                 </td>
             </tr>
         </tbody>
-        <!-- Single buttons -->
         <tfoot>
             <tr>
             </tr>
         </tfoot>
-
     </table>
 
-
-    <p id="special">
-        <!-- working on displaying more and more text -->
+        <!-- BEGIN JAVASCRIPT PART -->
         <script>
-            var interval = setInterval(sayHello, 1000);
-            var text = document.getElementById("special");
-            
-            // when press a key, will 'reset' the page
-            document.addEventListener('keydown', function() {
-                console.log('pressed')
-                text.innerHTML = '';
+            //TODO TEST THIS 
+            var arr = [35, 37, 36, 36, 36]; //arr to save temperature 
+            var max;
+            var min;
+            var avg;
+            n = 0;
+            $(document).ready(function(){
+            //read in most recent hour JSON data 
+            $.getJSON("test.json", function(data) { //this part hasn't been tested 
+                $.each(data, function(key, value){
+                    if (!isNaN(parseInt(value), 10) && n < 3600) { //if it's a number
+                        arr.push(value);
+                        n++;
+                    }
+                });
             });
+            //calculate the max, min and average 
 
-            function sayHello() {
-                text.innerHTML += 'hello<br>';
-                console.log('hello');
-            }
-        
-            function CtoF(value) {
-                var x = getElementById("c").value * 9 / 5 + 32;
-                document.getElementById("f").value = Math.round(x);
-            }
+            var sum = 0;
+            max = arr[0];
+            min = arr[0]; 
+            for( var i = 0; i < arr.length; i++ ){
+                    sum += arr[i];
+                    if (max < arr[i]) max = arr[i];
+                    if (min > arr[i]) min = arr[i];
+            };
+            avg = sum/arr.length;
+             
+             $("#show").click(function(){ 
+            $("#stats1").text("The current temperature is " + arr[0]);
+            $("#stats2").text("The maximum temperature in the past hour is " + max + " Celcius" );
+            $("#stats3").text("The minimum temperature in the past hour is " + min + " Celcius" ) ;
+            $("#stats4").text("The average temperature in the past hour is " + avg + " Celcius" );
+            });
+         
+            
+            
+            $('input:radio[name="c"]').change(function(){
+                //display the max, min and average temperature in Celcius 
+                console.log("C passed"); //test 
+                $("#stats1").text("The current temperature is " + arr[0]);
+                $("#stats2").text("The maximum temperature in the past hour is " + max + " Celcius" );
+                $("#stats3").text("The minimum temperature in the past hour is " + min + " Celcius" );
+                $("#stats4").text("The average temperature in the past hour is " + avg + " Celcius" );
+            });;
+
+            $('input:radio[name="f"]').change(function(){
+                //display the max, min and average temperature in Ferinheight  
+                console.log("F passed"); //test 
+                $("#stats1").text("The current temperature is " + ((arr[0])*9/5+32) + " Ferinheight");
+                $("#stats2").text("The maximum temperature in the past hour is " + (max*9/5+32) + " Ferinheight");
+                $("#stats3").text("The minimum temperature in the past hour is " + (min*9/5+32) + " Ferinheight");
+                $("#stats4").text("The average temperature in the past hour is " + (avg*9/5+32) + " Ferinheight");
+            });
+        });
 
         </script>        
     </p>
