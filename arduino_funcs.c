@@ -119,6 +119,7 @@ void* handle_arduino(void* p) {
       ard_fd = get_started("/dev/ttyACM0");
       pthread_mutex_unlock(lock);
       if (!is_open) {
+        sleep(5);
         pthread_mutex_lock(lock);
         ard_fd = get_started("/dev/ttyACM1");
         pthread_mutex_unlock(lock);
