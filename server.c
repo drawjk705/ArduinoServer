@@ -109,13 +109,13 @@ int start_server(int PORT_NUMBER) {
     pthread_t ard_t;
     pthread_create(&ard_t, NULL, &handle_arduino, pack);
 
-    pthread_t close_s;
-    pthread_create(&close_s, NULL, &close_server, pack);
-
 
     // keep on accepting requests as long as
     // haven't received command to close server
     while (!pack->quit_flag) {
+
+      pthread_t close_s;
+      pthread_create(&close_s, NULL, &close_server, pack);
 
       /******** set up select() for accept()ing HTML requests ********/
       int sret;                     // to get return value from select()
@@ -151,9 +151,10 @@ int start_server(int PORT_NUMBER) {
         }
       }
 
+      pthread_join(close_s, NULL);      // join close thread
+
     }
 
-    pthread_join(close_s, NULL);      // join close thread
 
     pthread_join(ard_t, NULL);              // join thread that handles Arduino behavior
 
@@ -181,32 +182,37 @@ void* close_server(void* p) {
     packet* pack          = (packet*) p;
     pthread_mutex_t* lock = pack->lock;
 
-    pthread_mutex_lock(lock);
-    pthread_mutex_unlock(lock);
-
     int flags = fcntl(STDIN_FILENO, F_GETFL);
     fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 
+    // int fd = 0;
+    // int sret;                     // to get return value from select()
+    // fd_set readfds;               // bit array to represent fds
+    // struct timeval timeout;       // struct to determine how long to wait before timeout
+    // FD_ZERO(&readfds);            // zero out bit array
+    // FD_SET(fd, &readfds);       // set bit array
+    // timeout.tv_sec = 3;           // set timeout time
+    // timeout.tv_usec = 0;
+
     char buf[10];
     buf[0] = '\0';
-    while (buf[0] != 'q') {
-      // pthread_mutex_lock(lock);
+      // sret = select(8, &readfds, NULL, NULL, &timeout);
+      // scanf("%s", buf);
       // scanf("%s", buf);
       int bytes_read = read(STDIN_FILENO, buf, sizeof(buf) - 1);
-      // pthread_mutex_unlock(lock);
       
       if (bytes_read > 0) {
         buf[bytes_read] = '\0';
         printf("\n\n%d bytes read: typed %s\n\n", bytes_read, buf);
+        if (buf[0] == 'q') {
+          pthread_mutex_lock(lock);
+          pack->quit_flag = 1;
+          pthread_mutex_unlock(lock);
+        }
       } else {
         printf("timed out\n");
       }
       sleep(2);
-    }
-
-    pthread_mutex_lock(lock);
-    pack->quit_flag = 1;
-    pthread_mutex_unlock(lock);
 
     pthread_exit(NULL);
 }
@@ -221,7 +227,6 @@ void* handle_connection(void* p) {
     packet* pack                   = (packet*) p;
     struct sockaddr_in client_addr = pack->client_addr;
     int fd                         = pack->fd;
-    // int ard_fd                     = pack->ard_fd;
     pthread_mutex_t* lock          = pack->lock;
 
     printf("Server got a connection from (%s, %d)\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
