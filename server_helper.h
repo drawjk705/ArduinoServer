@@ -11,17 +11,20 @@
 #include <errno.h>
 #include <string.h>
 #include <pthread.h>
-#include "linkedlist.h"
+#include <poll.h>
 
+/**
+ * struct to transfer data b/w threads
+ */
 typedef struct Packet packet;
 struct Packet
 {
     struct sockaddr_in client_addr;
     int fd;
-    int ard_fd;
-    linkedlist** l;
-    char* filename;
-    char* quit_ptr;
+    int quit_flag;
+    int is_Celsius;
+    pthread_mutex_t* lock;
+    char ctrl_signal;
 };
 
 void* handle_connection(void* p);
@@ -37,3 +40,5 @@ char parse_post(char* post);
 char* read_html_file(char* filename);
 
 void* close_server(void* p);
+
+int get_filetype(char* filename);

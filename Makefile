@@ -1,22 +1,26 @@
 CC = clang
 ARGS = -Wall -g -lpthread
 
-all: linkedlist server_helper ard server
+all: server_helper ard times json server
 
-# making .o file for linkedlist.c
-linkedlist: linkedlist.c linkedlist.o
-	$(CC) -c $(ARGS) linkedlist.c
+# making .o file for times
+times: times.c
+	$(CC) -c $(ARGS) times.c
+
+# making .o file for json
+json: json.c
+	$(CC) -c $(ARGS) json.c
 
 # making .o file for server_helper
 server_helper: server_helper.c
 	$(CC) -c $(ARGS) server_helper.c
 
-# making .o file for get_temp
-ard: arduino_funcs.c linkedlist
-	$(CC) -c $(ARGS) arduino_funcs.c
+# making .o file for arduino functions
+ard: arduino_funcs.c json times
+	$(CC) -c $(ARGS) arduino_funcs.c json.o times.o
 
-server: server_helper server.o ard
-	$(CC) -o server $(ARGS) server.c server_helper.o arduino_funcs.o linkedlist.o
+server: times json server_helper ard server.o
+	$(CC) -o server $(ARGS) server.c server_helper.o arduino_funcs.o json.o times.o
 
 clear:
 	rm -rf *.o server get_temp
