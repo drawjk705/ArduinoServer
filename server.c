@@ -183,7 +183,7 @@ void* close_server(void* p) {
     pthread_mutex_t* lock = pack->lock;
 
     int flags = fcntl(STDIN_FILENO, F_GETFL);
-    fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+    fcntl(0, F_SETFL, flags | O_NONBLOCK);
 
     // int fd = 0;
     // int sret;                     // to get return value from select()
@@ -199,7 +199,7 @@ void* close_server(void* p) {
       // sret = select(8, &readfds, NULL, NULL, &timeout);
       // scanf("%s", buf);
       // scanf("%s", buf);
-      int bytes_read = read(STDIN_FILENO, buf, sizeof(buf) - 1);
+      int bytes_read = read(0, buf, sizeof(buf) - 1);
       
       if (bytes_read > 0) {
         buf[bytes_read] = '\0';
@@ -212,7 +212,6 @@ void* close_server(void* p) {
       } else {
         printf("timed out\n");
       }
-      sleep(2);
 
     pthread_exit(NULL);
 }
