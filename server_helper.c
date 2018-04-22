@@ -153,9 +153,16 @@ char parse_post(char* post) {
         }
     }
     
-    if (strcmp(buf, "red") == 0)    return 'r';
-    if (strcmp(buf, "green") == 0)  return 'g';
-    if (strcmp(buf, "blue") == 0)   return 'b';
+    if (strcmp(buf, "red") == 0)   return 'r';
+    if (strcmp(buf, "green") == 0) return 'g';
+    if (strcmp(buf, "blue") == 0)  return 'b';
+    if (strcmp(buf, "c") == 0)     return 'c';
+    if (strcmp(buf, "f") == 0)     return 'f';
+    if (strcmp(buf, "l") == 0)     return 'l';
+    if (strcmp(buf, "s") == 0)     return 's';
+    if (strcmp(buf, "stdby") == 0) return 'q';
+    // need logic for [][] and for wake
+
 
 
     return '\0';

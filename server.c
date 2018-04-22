@@ -79,12 +79,6 @@ int start_server(int PORT_NUMBER) {
     /***************** Open Arduino Connection to Server *********************/
     /*************************************************************************/
 
-
-
-    // name of Serial Port
-    char* filename = "/dev/ttyACM0";
-    // char* filename = "/dev/ttyACM1";
-
     char* quit = malloc(sizeof(char));
 
     // set quit flag to '\0'
@@ -112,10 +106,13 @@ int start_server(int PORT_NUMBER) {
     pthread_t close_s;
     pthread_create(&close_s, NULL, &close_server, pack);
 
+    // pthread_mutex_lock(&lock);
+    int quit_flag = pack->quit_flag;
+    // pthread_mutex_unlock(&lock);
 
     // keep on accepting requests as long as
     // haven't received command to close server
-    while (!pack->quit_flag) {
+    while (!quit_flag) {
 
       /******** set up select() for accept()ing HTML requests ********/
       int sret;                     // to get return value from select()
@@ -150,7 +147,9 @@ int start_server(int PORT_NUMBER) {
           pthread_join(req, NULL);          // join request thread
         }
       }
-
+      // pthread_mutex_lock(&lock);
+      quit_flag = pack->quit_flag;
+      // pthread_mutex_unlock(&lock);
     }
 
     pthread_join(close_s, NULL);      // join close thread
@@ -162,6 +161,9 @@ int start_server(int PORT_NUMBER) {
 
     // free() pack
     free(pack);
+
+    // destroy lock
+    pthread_mutex_destroy(&lock);
 
     // 8. close: close the socket
     close(sock);
@@ -181,9 +183,6 @@ void* close_server(void* p) {
     packet* pack          = (packet*) p;
     pthread_mutex_t* lock = pack->lock;
 
-    pthread_mutex_lock(lock);
-    pthread_mutex_unlock(lock);
-
     int flags = fcntl(STDIN_FILENO, F_GETFL);
     fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 
@@ -191,7 +190,6 @@ void* close_server(void* p) {
     buf[0] = '\0';
     while (buf[0] != 'q') {
       // pthread_mutex_lock(lock);
-      // scanf("%s", buf);
       int bytes_read = read(STDIN_FILENO, buf, sizeof(buf) - 1);
       // pthread_mutex_unlock(lock);
       
@@ -204,9 +202,9 @@ void* close_server(void* p) {
       sleep(2);
     }
 
-    pthread_mutex_lock(lock);
+    // pthread_mutex_lock(lock);
     pack->quit_flag = 1;
-    pthread_mutex_unlock(lock);
+    // pthread_mutex_unlock(lock);
 
     pthread_exit(NULL);
 }
@@ -294,6 +292,12 @@ void* handle_connection(void* p) {
       char c = parse_post(post);
       pthread_mutex_lock(lock);
       pack->ctrl_signal = c;
+      if (c == 'f') {
+        pack->is_Celsius = 0;
+      }
+      if (c == 'c') {
+        pack->is_Celsius = 1;
+      }
       pthread_mutex_unlock(lock);
     }
     
