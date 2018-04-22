@@ -26,7 +26,7 @@ int get_started(char* filename) {
   // you may need to change the flags depending on your platform
   int ard_fd = open(filename, O_RDWR | O_NOCTTY | O_NDELAY);
   
-  if (ard_fd < 0) {
+  if (ard_fd <= 0) {
     close(ard_fd);
     is_open = 0;
     printf("could not open\n");
@@ -167,6 +167,7 @@ char* read_data(char* file_name, int fd, pthread_mutex_t* lock) {
   while (end == 0) {
       
       int bytes_read = read(fd, buf, 100);
+      printf("\t\t%d bytes read from arduino\n", bytes_read);
 
       if (bytes_read == 0) { 
         zero_count++;
@@ -176,6 +177,9 @@ char* read_data(char* file_name, int fd, pthread_mutex_t* lock) {
       if (zero_count > 20) {
           is_open = 0;
           return NULL;
+      }
+      if (bytes_read < 0) {
+        sleep(2);
       }
       for (int i = 0; i < bytes_read; i++) {
           if (buf[i] == '\n') {

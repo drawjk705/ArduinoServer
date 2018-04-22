@@ -3,18 +3,30 @@ body {
 }
 
 h1 {
+<<<<<<< HEAD
 	font-size: 40px;
+=======
+    font-size: 40px;
+>>>>>>> threads
     color: navy;
 }
 
 h2, th {
+<<<<<<< HEAD
 	font-size: 30px;
+=======
+    font-size: 30px;
+>>>>>>> threads
     color: blue;
     
 }
 
 p, td {
+<<<<<<< HEAD
 	font-size: 20px;
+=======
+    font-size: 20px;
+>>>>>>> threads
     color: navy;
 }
 
