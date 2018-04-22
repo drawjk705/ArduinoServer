@@ -12,7 +12,6 @@
     <p id = 'stats2'> </p>
     <p id = 'stats3'> </p>
     <p id = 'stats4'> </p>
-    <button id = 'show'> Get Temperature </button>
 
     <!-- Table with interactive options -->
     <table>
@@ -98,6 +97,7 @@
                         n++;
                     }
                 });
+            });
             //calculate the max, min and average 
 
             var sum = 0;
@@ -111,10 +111,14 @@
             avg = sum/arr.length;
              
             //showing teperature by default 
+            $("#stats1").text("The current temperature is " + arr[0] + " Celcius");
+            $("#stats2").text("The maximum temperature in the past hour is " + max + " Celcius" );
+            $("#stats3").text("The minimum temperature in the past hour is " + min + " Celcius" );
+            $("#stats4").text("The average temperature in the past hour is " + avg + " Celcius" );
 
-             $("#show").click(function(){ 
-            });            
-            $('input:radio[name="c"]').change(function(){
+
+
+           $('input:radio[name="c"]').change(function(){
                 //display the max, min and average temperature in Celcius 
                 console.log("C passed"); //test 
                 $("#stats1").text("The current temperature is " + arr[0] + " Celcius");
@@ -132,7 +136,7 @@
                 $("#stats4").text("The average temperature in the past hour is " + (avg*9/5+32) + " Ferinheight");
             });
 
-                $('input:radio[name="q"]').change(function(){
+            $('input:radio[name="stdby"]').change(function(){
                 //display the max, min and average temperature in Ferinheight  
                 console.log("sleep mode "); //test 
                 $("#stats1").text(''); 
@@ -140,6 +144,14 @@
                 $("#stats3").text(''); 
                 $("#stats4").text(''); 
             });
+              $('input:radio[name="wake"]').change(function(){
+                //display the max, min and average temperature in Celcius 
+                console.log("C passed"); //test 
+                $("#stats1").text("The current temperature is " + arr[0] + " Celcius");
+                $("#stats2").text("The maximum temperature in the past hour is " + max + " Celcius" );
+                $("#stats3").text("The minimum temperature in the past hour is " + min + " Celcius" );
+                $("#stats4").text("The average temperature in the past hour is " + avg + " Celcius" );
+            });;
         });
         </script>        
     </p>
