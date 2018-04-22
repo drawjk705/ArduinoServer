@@ -216,11 +216,6 @@ void* close_server(void* p) {
       } else {
         printf("timed out\n");
       }
-      sleep(2);
-
-    // pthread_mutex_lock(lock);
-    pack->quit_flag = 1;
-    // pthread_mutex_unlock(lock);
 
     pthread_exit(NULL);
 }

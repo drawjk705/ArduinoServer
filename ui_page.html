@@ -90,7 +90,7 @@
             n = 0;
             $(document).ready(function(){
             //read in most recent hour JSON data 
-            $.getJSON("test.json", function(data) { //this part hasn't been tested 
+            $.getJSON("output.json", function(data) { //this part hasn't been tested 
                 $.each(data, function(key, value){
                     if (!isNaN(parseInt(value), 10) && n < 3600) { //if it's a number
                         arr.push(value);
