@@ -97,8 +97,8 @@
                         n++;
                     }
                 });
-            });
             //calculate the max, min and average 
+
             var sum = 0;
             max = arr[0];
             min = arr[0]; 
@@ -126,6 +126,7 @@
                 $("#stats3").text("The minimum temperature in the past hour is " + min + " Celcius" );
                 $("#stats4").text("The average temperature in the past hour is " + avg + " Celcius" );
             });;
+
             $('input:radio[name="f"]').change(function(){
                 //display the max, min and average temperature in Ferinheight  
                 console.log("F passed"); //test 
