@@ -12,7 +12,6 @@
     <p id = 'stats2'> </p>
     <p id = 'stats3'> </p>
     <p id = 'stats4'> </p>
-    <button id = 'show'> Get Temperature </button>
 
     <!-- Table with interactive options -->
     <table>
@@ -66,9 +65,9 @@
                     </form>
                 </td>
                   <td>
-                    <!-- standby mode -->
+                    <!-- sleep mode -->
                     <form method="post">
-                        Standby Mode <br>
+                        <input type="radio" id="q" name="q"> Sleep Mode <br>
                         <input type="submit" name="submit"> 
                     </form>
                 </td>
@@ -83,7 +82,7 @@
         <!-- BEGIN JAVASCRIPT PART -->
         <script>
             //TODO TEST THIS 
-            var arr = [35, 37, 36, 36, 36]; //arr to save temperature 
+            var arr = [35]; //arr to save temperature 
             var max;
             var min;
             var avg;
@@ -92,7 +91,7 @@
             //read in most recent hour JSON data 
             $.getJSON("test.json", function(data) { //this part hasn't been tested 
                 $.each(data, function(key, value){
-                    if (!isNaN(parseInt(value), 10) && n < 3600) { //if it's a number
+                    if (!isNaN(parseInt(value), 10) && n < 1800) { //if it's a number and within an hour (we have 1800 2-second interval)
                         arr.push(value);
                         n++;
                     }
@@ -110,13 +109,11 @@
             };
             avg = sum/arr.length;
              
-             $("#show").click(function(){ 
+            //showing teperature by default 
             $("#stats1").text("The current temperature is " + arr[0] + " Celcius");
             $("#stats2").text("The maximum temperature in the past hour is " + max + " Celcius" );
             $("#stats3").text("The minimum temperature in the past hour is " + min + " Celcius" ) ;
             $("#stats4").text("The average temperature in the past hour is " + avg + " Celcius" );
-            });
-         
             
             
             $('input:radio[name="c"]').change(function(){
@@ -135,6 +132,15 @@
                 $("#stats2").text("The maximum temperature in the past hour is " + (max*9/5+32) + " Ferinheight");
                 $("#stats3").text("The minimum temperature in the past hour is " + (min*9/5+32) + " Ferinheight");
                 $("#stats4").text("The average temperature in the past hour is " + (avg*9/5+32) + " Ferinheight");
+            });
+
+                $('input:radio[name="q"]').change(function(){
+                //display the max, min and average temperature in Ferinheight  
+                console.log("sleep mode "); //test 
+                $("#stats1").text(''); 
+                $("#stats2").text(''); 
+                $("#stats3").text(''); 
+                $("#stats4").text(''); 
             });
         });
 
