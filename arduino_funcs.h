@@ -12,22 +12,18 @@
 #include <string.h>
 #include <pthread.h>
 #include <time.h>
+#include "times.h"
+#include "json.h"
 
 void configure(int fd);
 
-int get_started(void* p);
+int check_if_open(int fd);
 
-void* get_temps(void* p);
+int get_started(char* file_name);
 
-float get_avg_temp(void* l);
+void* handle_arduino(void* p);
 
-float get_max_temp(void* l);
-
-float get_min_temp(void* l);
-
-float* read_temp(char* file_name, int fd);
-
-float* strip_letters(char* str);
+char* read_data(char* file_name, int fd, pthread_mutex_t* lock);
 
 void write_temp_to_file(float* temp);
 

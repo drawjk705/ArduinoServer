@@ -14,7 +14,7 @@
 /**
  * parse HTTP request to see if it's a GET or POST
  * @param  request the HTTP request
- * @return         1 if GET, 2 if POST
+ * @return         0 if GET, 1 if POST
  */
 int is_get(char* request) {
     
@@ -28,7 +28,6 @@ int is_get(char* request) {
             type[i] = request[i];
         }
     }
-
     if (strcmp(type, "GET") == 0) {
         return 0;
     } else if (strcmp(type, "POST") == 0) {
@@ -67,8 +66,6 @@ char* get_post(char* request) {
     // return the value
     return tok;
 }
-
-
 
 /**
  * function to parse request portion of HTTP request,
@@ -111,6 +108,9 @@ char* read_html_file(char* filename) {
     
     // create file pointer
     FILE* fp = fopen(filename, "r");
+    if (fp == NULL) {
+        return NULL;
+    }
 
     // get length of file
     fseek(fp, 0, SEEK_END);
@@ -136,6 +136,11 @@ char* read_html_file(char* filename) {
     return out;
 }
 
+/**
+ * parse a post request
+ * @param  post the request
+ * @return      char flag for what to do based on request
+ */
 char parse_post(char* post) {
     char buf[10];
 
@@ -148,10 +153,49 @@ char parse_post(char* post) {
         }
     }
     
-    if (strcmp(buf, "red") == 0)    return 'r';
-    if (strcmp(buf, "green") == 0)  return 'g';
-    if (strcmp(buf, "blue") == 0)   return 'b';
+    if (strcmp(buf, "red") == 0)   return 'r';
+    if (strcmp(buf, "green") == 0) return 'g';
+    if (strcmp(buf, "blue") == 0)  return 'b';
+    if (strcmp(buf, "c") == 0)     return 'c';
+    if (strcmp(buf, "f") == 0)     return 'f';
+    if (strcmp(buf, "l") == 0)     return 'l';
+    if (strcmp(buf, "s") == 0)     return 's';
+    if (strcmp(buf, "stdby") == 0) return 'q';
+    // need logic for [][] and for wake
+
 
 
     return '\0';
+}
+
+/**
+ * get the type of a file
+ * @param  filename file's name
+ * @return          0 if fail;
+ *                  1 if html
+ *                  2 if css
+ *                  3 if javascript
+ */
+int get_filetype(char* filename) {
+
+    int watch = 0;
+
+    for (int i = 0; i < strlen(filename); i++) {
+        if (watch) {
+            if (filename[i] == 'h') {
+                return 1;
+            }
+            else if (filename[i] == 'c') {
+                return 2;
+            }
+            else if (filename[i] == 'j') {
+                return 3;
+            }
+        }
+        if (filename[i] == '.') {
+            watch = 1;
+        }
+    }
+
+    return 0;
 }

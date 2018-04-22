@@ -1,40 +1,7 @@
 #include "arduino_funcs.h"
 #include "server_helper.h"
 
-float get_max_temp(void* l) {
-  float max = 0;
-  linkedlist* ll = (linkedlist*) l;
-  float** array = (float**) to_array(ll);
-  for (int i = 0; i < ll->size; i++) {
-    if (*(array[i]) > max) {
-      max = *(array[i]);
-    }
-  }
-  return max;
-}
-
-float get_min_temp(void* l) {
-  float min = 999;
-  linkedlist* ll = (linkedlist*) l;
-  float** array = (float**) to_array(ll);
-  for (int i = 0; i < ll->size; i++) {
-    if (*(array[i]) < min) {
-      min = *(array[i]);
-    }
-  } 
-  return min;
-}
-
-float get_avg_temp(void* l) {
-  float total = 0;
-  linkedlist* ll = (linkedlist*) l;
-  float** array = (float**) to_array(ll);
-  for (int i = 0; i < ll->size; i++) {
-    total += *(array[i]);
-  }
-  return total / (float) ll->size;
-}
-
+int is_open = 0;
 
 /*
 This code configures the file descriptor for use as a serial port.
@@ -51,177 +18,216 @@ void configure(int fd) {
  * function to get temperature from Arduino
  * @param p pointer to filename
  */
-int get_started(void* p) {
+int get_started(char* filename) {
 
-  // unpack packet
-  packet* pack = malloc(sizeof(packet));
-
-  
-  char* file_name = (char*) p;
+  printf("\t\ttrying to open %s\n", filename);
 
   // try to open the file for reading and writing
   // you may need to change the flags depending on your platform
-  int ard_fd = open(file_name, O_RDWR | O_NOCTTY | O_NDELAY);
+  int ard_fd = open(filename, O_RDWR | O_NOCTTY | O_NDELAY);
   
   if (ard_fd < 0) {
-    perror("Could not open file\n");
-    exit(1);
+    close(ard_fd);
+    is_open = 0;
+    printf("could not open\n");
+    // perror("Could not open file\n");
+    // exit(1);
+    return -1;
   }
   else {
-    printf("Successfully opened %s for reading and writing\n", file_name);
+    printf("Successfully opened %s for reading and writing\n", filename);
+    is_open = 1;
   }
 
   configure(ard_fd);
+  printf("ard_fd = %d\n", ard_fd);
 
   return ard_fd;
 }
 
-void* get_temps(void* p) {
+void* handle_arduino(void* p) {
+
 
   packet* pack = (packet*) p;
+  pthread_mutex_t* lock = pack->lock;
 
-  // unpack packet
-  linkedlist** l = pack->l;
-  char* file_name = pack->filename;
-  int ard_fd = pack->ard_fd;
-  char* quit = pack->quit_ptr;
+  int ard_fd = -1;
+  char* filename = "/dev/ttyACM0";
 
-  // do a few times to get rid of garbage
-  for (int i = 0; i < 10; i++) {
-    read_temp(file_name, ard_fd);
-  }
-  // int i = 100;
-  while (*quit != 'q') {
-    // sleep(10);
-    float* f = read_temp(file_name, ard_fd);
-    
-    // add temperature to linked list,
-    // to display most recent temperatures
-    add_to_tail(f, *l);
+  dict* d = create_dict();
 
-    // remove the least recently added
-    // temperature if size exceeds 100
-    // if ((*l)->size > 100) {
-    //   remove_from_front(*l);
-    // }
-    
-    ////////////////////////
-    // write to HTML file //
-    ////////////////////////
+  pthread_mutex_lock(lock);
+  int is_quit = pack->quit_flag;
+  pthread_mutex_unlock(lock);
 
-    free(f);
-    printf("completed readings\n");
+  while (!is_quit) {
+
+    pthread_mutex_lock(lock);
+    if (pack->is_Celsius) {
+      replace_head(d, "C");
+    } else {
+      replace_head(d, "F");
+    }
+    pthread_mutex_unlock(lock);
+
+    if (is_open) {
+
+      if (pack->ctrl_signal != '\0') {
+        char sig[3];
+        pthread_mutex_lock(lock);
+        sig[0] = pack->ctrl_signal;
+        pthread_mutex_unlock(lock);
+
+        sig[1] = '\n';
+        sig[2] = '\0';
+        printf("writing %s to arduino\n", sig);
+        pthread_mutex_lock(lock);
+        write(ard_fd, sig, strlen(sig));
+        pthread_mutex_unlock(lock);
+        sleep(3);
+        strcpy(sig, "w\n");
+        pthread_mutex_lock(lock);
+        write(ard_fd, sig, strlen(sig));
+        pack->ctrl_signal = '\0';
+        pthread_mutex_unlock(lock);
+      }
+
+      char* time = get_current_time();
+
+      pthread_mutex_lock(lock);
+      char* temperature = read_data(filename, ard_fd, NULL);
+      pthread_mutex_unlock(lock);
+
+      char* value = malloc(sizeof(char) * 20);
+      if (temperature == NULL) {
+        strcpy(value, "OFFLINE");
+      } else {
+        strcpy(value, temperature);
+        free(temperature);
+      }
+      kvp* k = make_pair(time, value);
+      add_to_dict(k, d);
+      write_to_json("output.json", d);
+    }
+    else if (!is_open) {
+      close(ard_fd);
+
+      printf("Arduino is offline\n");
+      
+      // try to open Arduino
+      pthread_mutex_lock(lock);
+      ard_fd = get_started("/dev/ttyACM0");
+      pthread_mutex_unlock(lock);
+      if (!is_open) {
+        sleep(5);
+        pthread_mutex_lock(lock);
+        ard_fd = get_started("/dev/ttyACM1");
+        pthread_mutex_unlock(lock);
+        if (is_open) {
+          filename = "dev/ttyACM1";
+        }
+      } else {
+        filename = "dev/ttyACM0";
+      }
+    }
     sleep(2);
-    // printf("%d\n", i--);
+    pthread_mutex_lock(lock);
+    is_quit = pack->quit_flag;
+    pthread_mutex_unlock(lock);
+    if (is_quit) {
+      break;
+    }
   }
+  close(ard_fd);
 
-
+  clear_dictionary(d);
 
   pthread_exit(NULL);
 }
 
 /**
- * funciton for single read of temperature from Arduino
+ * function for single read of temperature from Arduino
  * @param  file_name Arduino filename
  * @param  fd        file descriptor
  * @return           the temperature as a float, without any surrounding text
  */
-float* read_temp(char* file_name, int fd) {
+char* read_data(char* file_name, int fd, pthread_mutex_t* lock) {
   /*
     Write the rest of the program below, using the read and write system calls.
   */
+ 
+  printf("file descriptor is: %d\n", fd);
   
   char out[100];
-
   int index = 0;
-
   char buf[100];
-
   int end = 0;
+  int zero_count = 0;
 
   while (end == 0) {
+      
       int bytes_read = read(fd, buf, 100);
 
+      if (bytes_read == 0) { 
+        zero_count++;
+      } else {
+        zero_count = 0;
+      }
+      if (zero_count > 20) {
+          is_open = 0;
+          return NULL;
+      }
       for (int i = 0; i < bytes_read; i++) {
-          out[index++] = buf[i];
           if (buf[i] == '\n') {
               out[index + 1] = '\0';
-              // printf("%s\n", out);
+              printf("%s\n", out);
               end = 1;
               break;
           }
+          out[index++] = buf[i];
       }
   }
-  float* f = strip_letters(out);
-  printf("%f\n", *f);
-
-  return f;
-
+  char* temp = malloc(sizeof(char) * (strlen(out) + 1));
+  strcpy(temp, out);
+  
+  return temp;
 }
 
-float* strip_letters(char* str) {
 
-  float* f = malloc(sizeof(float));
+// int main() {
 
-  int start = 0;
-  int end = 0;
+//   int ard_fd = get_started("/dev/ttyACM0");
+//   if (!is_open) {
+//     ard_fd = get_started("/dev/ttyACM1");
+//     if (is_open) {
+//       // int filename = "dev/ttyACM1";
+//     }
+//   } else {
+//     // filename = "dev/ttyACM0";
+//   }
+  
+//   // char c = 'b';
 
-  for (int i = 0; i < strlen(str); i++) {
-    // anything that's a number or decimal
-    if ((str[i] >= 49 && str[i] <= 57) || str[i] == 46) {
-      if (start == 0) {
-        start = i;
-      }
-    } else if (start != 0) {
-      end = i;
-      break;
-    }
-  }
-  if (end == 0) {
-    end = strlen(str) - 1;
-  }
+//   // sleep(5);
 
-  char out[end - start];
+//   // printf("writing %c\n", c);
 
-  for (int i = 0; i < end - start; i++) {
-    out[i] = str[i + start];
-  }
+//   // write(ard_fd, &c, sizeof(char));
 
-  *f = atof(out);
 
-  return f;
-}
 
-void write_to_arduino(int fd, char c) {
-  if (write(fd, &c, sizeof(char)) != sizeof(char)) {
-    perror("Could not write to Arduino");
-    exit(1);
-  }
-  printf("writing %c to Arduino\n", c);
-}
 
-void write_temp_to_file(float* temp) {
+//   // char buf[3];
+//   // while (1) {
+//   //   int bytes_read = read(STDIN_FILENO, buf, (sizeof(buf) - 1));
+//   //   buf[bytes_read] = '\0';
+//   //   if (buf[0] == 'q') {
+//   //     break;
+//   //   }
+//   //   printf("read %d bytes, and wrote %s\n", bytes_read, buf);
+//   //   write(ard_fd, buf, strlen(buf));
+//   // }
+//   // close(ard_fd);
 
-  FILE* f = fopen("temperatures.txt", "r");
+// }
 
-  // get file length
-  int file_len = fseek(f, 0, SEEK_END);
-
-  char* buff = malloc(sizeof(char) * (file_len + 1));
-
-  // reset location in file
-  fseek(f, 0, SEEK_SET);
-
-  // read file into buffer
-  fread(buff, sizeof(char), file_len, f);
-
-  fclose(f);
-
-  f = fopen("temperatures.txt", "w");
-
-  fwrite(temp, sizeof(float), 1, f);
-  fwrite(buff, sizeof(char), strlen(buff), f);
-
-  fclose(f);
-
-}
