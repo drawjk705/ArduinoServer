@@ -272,7 +272,7 @@ void* handle_connection(void* p) {
         type_msg = "application/javascript";
         break;
       case 4:
-        type_msg = "text/json";
+        type_msg = "text/javascript";
     }
 
     // this is the message that we'll send back

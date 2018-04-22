@@ -126,7 +126,7 @@ char* read_html_file(char* filename) {
     rewind(fp);
 
     // read file into out
-    fread(out, sizeof(char), len - 1, fp);
+    fread(out, sizeof(char), len, fp);
 
     // null terminate
     out[len] = '\0';
