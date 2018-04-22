@@ -74,22 +74,28 @@ void* handle_arduino(void* p) {
 
       if (pack->ctrl_signal != '\0') {
         char sig[3];
+        
         pthread_mutex_lock(lock);
         sig[0] = pack->ctrl_signal;
         pthread_mutex_unlock(lock);
-
         sig[1] = '\n';
         sig[2] = '\0';
+
         printf("writing %s to arduino\n", sig);
+        
         pthread_mutex_lock(lock);
         write(ard_fd, sig, strlen(sig));
         pthread_mutex_unlock(lock);
         sleep(3);
-        strcpy(sig, "w\n");
-        pthread_mutex_lock(lock);
-        write(ard_fd, sig, strlen(sig));
-        pack->ctrl_signal = '\0';
-        pthread_mutex_unlock(lock);
+        
+        if (sig[0] != 'q') {
+          strcpy(sig, "w\n");
+          
+          pthread_mutex_lock(lock);
+          write(ard_fd, sig, strlen(sig));
+          pack->ctrl_signal = '\0';
+          pthread_mutex_unlock(lock);
+        }
       }
 
       char* time = get_current_time();
@@ -107,7 +113,9 @@ void* handle_arduino(void* p) {
       }
       kvp* k = make_pair(time, value);
       add_to_dict(k, d);
-      write_to_json("output.json", d);
+      if (!pack->requesting) {
+        write_to_json("output.json", d);
+      }
     }
     else if (!is_open) {
       close(ard_fd);

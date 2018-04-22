@@ -161,6 +161,7 @@ char parse_post(char* post) {
     if (strcmp(buf, "l") == 0)     return 'l';
     if (strcmp(buf, "s") == 0)     return 's';
     if (strcmp(buf, "stdby") == 0) return 'q';
+    if (strcmp(buf, "wake") == 0)  return 'w';
     // need logic for [][] and for wake
 
 
@@ -189,6 +190,9 @@ int get_filetype(char* filename) {
                 return 2;
             }
             else if (filename[i] == 'j') {
+                if (filename[i + 2] == 'o') {
+                    return 4;
+                }
                 return 3;
             }
         }

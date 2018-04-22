@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
-<script src="jquery.js"></script> 
 <head>
+    <!-- <script src="http://code.jquery.com/jquery-1.9"></script> -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <link rel="stylesheet" type="text/css" href="ui_page.css">
     <title>Our page</title>
 </head>
@@ -51,7 +52,7 @@
                  <td>
                     <!-- temp format -->
                     <form method="post">
-                        <input type="radio" id="c" name="c"> Celcius <br>
+                        <input type="radio" id="c" name="c"> Celsius <br>
                         <input type="radio" id="f" name="f"> Fahrenheit <br>
                         <input type="submit" name="submit">
                     </form>
@@ -83,11 +84,68 @@
         <!-- BEGIN JAVASCRIPT PART -->
         <script>
             //TODO TEST THIS 
-            var arr = [35, 37, 36, 36, 36]; //arr to save temperature 
+            var readings = {}; // dictionary to save temperature 
             var max;
             var min;
             var avg;
+            
             n = 0;
+
+            // get json file data, and add it to a dictionary
+            $.getJSON("output.json", function(data) {
+                var total_temp = 0;
+                var size = 0;
+                $.each(data, function(key, val) {
+                    if (!(key in readings)) {
+                        readings[key] = val;
+                    }
+                })
+
+                for (var time in readings) {
+                    console.log("total temp: " + total_temp);
+                    console.log(size);                    
+                    if (withinHour(time)) {
+                        if (!isNaN(parseFloat(readings[time]))) {
+                            total_temp += parseFloat(readings[time]);
+                            size += 1;
+                        }
+                    }
+                }
+
+                console.log(total_temp);
+                console.log(size);
+
+                avg = total_temp / size;
+                console.log(avg);
+            });
+
+            function withinHour(time) {
+
+                // 15:32:56
+                console.log(time);
+                console.log(typeof time);
+
+                var now = new Date();
+                console.log(now.getHours())
+                console.log(now.getMinutes())
+                console.log(now.getSeconds())
+
+                var hour, min, sec;
+
+                var split = time.split(":");
+
+                if (now.getHours() <= split[0]) {
+                    console.log(now.getHours() + " vs " + split[0]);
+                    return true;
+                } else if (now.getMinutes() <= split[1]) {
+                    console.log(now.getMinutes() + " vs " + split[1]);
+                    return true;
+                } else {
+                    console.log("nothing");
+                    return false;
+                }
+            }
+
             $(document).ready(function(){
             //read in most recent hour JSON data 
             $.getJSON("output.json", function(data) { //this part hasn't been tested 
@@ -98,7 +156,7 @@
                     }
                 });
             });
-            //calculate the max, min and average 
+            calculate the max, min and average 
 
             var sum = 0;
             max = arr[0];
@@ -111,20 +169,20 @@
             avg = sum/arr.length;
              
             //showing teperature by default 
-            $("#stats1").text("The current temperature is " + arr[0] + " Celcius");
-            $("#stats2").text("The maximum temperature in the past hour is " + max + " Celcius" );
-            $("#stats3").text("The minimum temperature in the past hour is " + min + " Celcius" );
-            $("#stats4").text("The average temperature in the past hour is " + avg + " Celcius" );
+            $("#stats1").text("The current temperature is " + arr[0] + " Celsius");
+            $("#stats2").text("The maximum temperature in the past hour is " + max + " Celsius" );
+            $("#stats3").text("The minimum temperature in the past hour is " + min + " Celsius" );
+            $("#stats4").text("The average temperature in the past hour is " + avg + " Celsius" );
 
 
 
            $('input:radio[name="c"]').change(function(){
-                //display the max, min and average temperature in Celcius 
+                //display the max, min and average temperature in Celsius 
                 console.log("C passed"); //test 
-                $("#stats1").text("The current temperature is " + arr[0] + " Celcius");
-                $("#stats2").text("The maximum temperature in the past hour is " + max + " Celcius" );
-                $("#stats3").text("The minimum temperature in the past hour is " + min + " Celcius" );
-                $("#stats4").text("The average temperature in the past hour is " + avg + " Celcius" );
+                $("#stats1").text("The current temperature is " + arr[0] + " Celsius");
+                $("#stats2").text("The maximum temperature in the past hour is " + max + " Celsius" );
+                $("#stats3").text("The minimum temperature in the past hour is " + min + " Celsius" );
+                $("#stats4").text("The average temperature in the past hour is " + avg + " Celsius" );
             });;
 
             $('input:radio[name="f"]').change(function(){
@@ -145,14 +203,14 @@
                 $("#stats4").text(''); 
             });
               $('input:radio[name="wake"]').change(function(){
-                //display the max, min and average temperature in Celcius 
+                //display the max, min and average temperature in Celsius 
                 console.log("C passed"); //test 
-                $("#stats1").text("The current temperature is " + arr[0] + " Celcius");
-                $("#stats2").text("The maximum temperature in the past hour is " + max + " Celcius" );
-                $("#stats3").text("The minimum temperature in the past hour is " + min + " Celcius" );
-                $("#stats4").text("The average temperature in the past hour is " + avg + " Celcius" );
-            });;
-        });
+                $("#stats1").text("The current temperature is " + arr[0] + " Celsius");
+                $("#stats2").text("The maximum temperature in the past hour is " + max + " Celsius" );
+                $("#stats3").text("The minimum temperature in the past hour is " + min + " Celsius" );
+                $("#stats4").text("The average temperature in the past hour is " + avg + " Celsius" );
+            });
+        };
         </script>        
     </p>
 

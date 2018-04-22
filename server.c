@@ -99,6 +99,7 @@ int start_server(int PORT_NUMBER) {
     pack->lock        = &lock;
     pack->is_Celsius  = 1;
     pack->ctrl_signal = '\0';
+    pack->requesting  = 0;
 
     pthread_t ard_t;
     pthread_create(&ard_t, NULL, &handle_arduino, pack);
@@ -133,6 +134,8 @@ int start_server(int PORT_NUMBER) {
       // if have received an HTTP request...
       if (sret != 0) {
 
+        pack->requesting = 1;
+
         // accept
         int fd = accept(sock, (struct sockaddr *)&client_addr,(socklen_t *)&sin_size);
       
@@ -152,6 +155,7 @@ int start_server(int PORT_NUMBER) {
       // pthread_mutex_unlock(&lock);
 
       pthread_join(close_s, NULL);      // join close thread
+      pack->requesting = 0;
     }
 
 
@@ -267,6 +271,8 @@ void* handle_connection(void* p) {
       case 3:
         type_msg = "application/javascript";
         break;
+      case 4:
+        type_msg = "text/json";
     }
 
     // this is the message that we'll send back

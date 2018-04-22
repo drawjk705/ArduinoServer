@@ -25,6 +25,7 @@ struct Packet
     int is_Celsius;
     pthread_mutex_t* lock;
     char ctrl_signal;
+    int requesting;
 };
 
 void* handle_connection(void* p);
