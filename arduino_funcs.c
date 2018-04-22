@@ -56,50 +56,47 @@ void* handle_arduino(void* p) {
 
   dict* d = create_dict();
 
-  // pthread_mutex_lock(lock);
-  int quit_flag = pack->quit_flag;
-  // pthread_mutex_unlock(lock);
+  pthread_mutex_lock(lock);
+  int is_quit = pack->quit_flag;
+  pthread_mutex_unlock(lock);
 
-  while (quit_flag) {
+  while (!is_quit) {
 
+    pthread_mutex_lock(lock);
     if (pack->is_Celsius) {
       replace_head(d, "C");
     } else {
       replace_head(d, "F");
     }
+    pthread_mutex_unlock(lock);
 
     if (is_open) {
 
       if (pack->ctrl_signal != '\0') {
         char sig[3];
+        pthread_mutex_lock(lock);
         sig[0] = pack->ctrl_signal;
+        pthread_mutex_unlock(lock);
+
         sig[1] = '\n';
         sig[2] = '\0';
         printf("writing %s to arduino\n", sig);
-
-        // pthread_mutex_lock(lock);
+        pthread_mutex_lock(lock);
         write(ard_fd, sig, strlen(sig));
-        // pthread_mutex_unlock(lock);
-
+        pthread_mutex_unlock(lock);
         sleep(3);
-        if (sig[0] != 'q') {
-          strcpy(sig, "w\n");
+        strcpy(sig, "w\n");
+        pthread_mutex_lock(lock);
+        write(ard_fd, sig, strlen(sig));
+        pack->ctrl_signal = '\0';
+        pthread_mutex_unlock(lock);
+      }
 
-          // pthread_mutex_lock(lock);
-          write(ard_fd, sig, strlen(sig));
-          // pthread_mutex_unlock(lock);
-          
-          pack->ctrl_signal = '\0';
-        }
-      }
-      if (quit_flag) {
-        break;
-      }
       char* time = get_current_time();
 
-      // pthread_mutex_lock(lock);
+      pthread_mutex_lock(lock);
       char* temperature = read_data(filename, ard_fd, NULL);
-      // pthread_mutex_unlock(lock);
+      pthread_mutex_unlock(lock);
 
       char* value = malloc(sizeof(char) * 20);
       if (temperature == NULL) {
@@ -113,19 +110,19 @@ void* handle_arduino(void* p) {
       write_to_json("output.json", d);
     }
     else if (!is_open) {
+      close(ard_fd);
+
       printf("Arduino is offline\n");
       
       // try to open Arduino
-      // pthread_mutex_lock(lock);
+      pthread_mutex_lock(lock);
       ard_fd = get_started("/dev/ttyACM0");
-      // pthread_mutex_unlock(lock);
-
-      if (!is_open) {    
-        
-        // pthread_mutex_lock(lock);
+      pthread_mutex_unlock(lock);
+      if (!is_open) {
+        sleep(5);
+        pthread_mutex_lock(lock);
         ard_fd = get_started("/dev/ttyACM1");
-        // pthread_mutex_unlock(lock);
-
+        pthread_mutex_unlock(lock);
         if (is_open) {
           filename = "dev/ttyACM1";
         }
@@ -134,9 +131,12 @@ void* handle_arduino(void* p) {
       }
     }
     sleep(2);
-    // pthread_mutex_lock(lock);
-    quit_flag = pack->quit_flag;
-    // pthread_mutex_unlock(lock);
+    pthread_mutex_lock(lock);
+    is_quit = pack->quit_flag;
+    pthread_mutex_unlock(lock);
+    if (is_quit) {
+      break;
+    }
   }
   close(ard_fd);
 
@@ -165,17 +165,19 @@ char* read_data(char* file_name, int fd, pthread_mutex_t* lock) {
   int zero_count = 0;
 
   while (end == 0) {
+      
       int bytes_read = read(fd, buf, 100);
+
       if (bytes_read == 0) { 
         zero_count++;
-        if (zero_count > 20) {
-          close(fd);
+      } else {
+        zero_count = 0;
+      }
+      if (zero_count > 20) {
           is_open = 0;
           return NULL;
-        }
       }
       for (int i = 0; i < bytes_read; i++) {
-        zero_count = 0;
           if (buf[i] == '\n') {
               out[index + 1] = '\0';
               printf("%s\n", out);
