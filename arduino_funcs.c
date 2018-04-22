@@ -55,6 +55,7 @@ void* handle_arduino(void* p) {
   char* filename = "/dev/ttyACM0";
 
   dict* d = create_dict();
+  int is_stdby = 0;
 
   pthread_mutex_lock(lock);
   int is_quit = pack->quit_flag;
@@ -62,15 +63,17 @@ void* handle_arduino(void* p) {
 
   while (!is_quit) {
 
-    pthread_mutex_lock(lock);
-    if (pack->is_Celsius) {
-      replace_head(d, "C");
-    } else {
-      replace_head(d, "F");
-    }
-    pthread_mutex_unlock(lock);
-
     if (is_open) {
+
+      if (!is_stdby) {
+        pthread_mutex_lock(lock);
+        if (pack->is_Celsius) {
+          replace_head(d, "C");
+        } else {
+          replace_head(d, "F");
+        }
+        pthread_mutex_unlock(lock);
+      }
 
       if (pack->ctrl_signal != '\0') {
         char sig[3];
@@ -90,11 +93,12 @@ void* handle_arduino(void* p) {
         
         if (sig[0] != 'q') {
           strcpy(sig, "w\n");
-          
           pthread_mutex_lock(lock);
           write(ard_fd, sig, strlen(sig));
           pack->ctrl_signal = '\0';
           pthread_mutex_unlock(lock);
+        } else {
+          replace_head(d, "S");
         }
       }
 
@@ -107,12 +111,13 @@ void* handle_arduino(void* p) {
       char* value = malloc(sizeof(char) * 20);
       if (temperature == NULL) {
         strcpy(value, "OFFLINE");
+        replace_head(d, "O");
       } else {
         strcpy(value, temperature);
         free(temperature);
+        kvp* k = make_pair(time, value);
+        add_to_dict(k, d);
       }
-      kvp* k = make_pair(time, value);
-      add_to_dict(k, d);
       if (!pack->requesting) {
         write_to_json("output.json", d);
       }

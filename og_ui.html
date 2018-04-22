@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<!-- <script src="jquery.js"></script> -->
+<head>
+    <link rel="stylesheet" type="text/css" href="ui_page.css">
+    <title>Our page</title>
+</head>
+<body>
+
+    <p class="top">Welcome to our page</p>
+    <!-- Table with interactive options -->
+    <table>
+        <!-- Headers -->
+        <thead>
+            <tr>
+                <!-- Light Interactions -->
+                <th>
+                    Select Light                    
+                </th>
+                <!-- Temperature Interactions -->
+                <th>
+                    Select Tempetature Type
+                </th>
+                <!-- Something else -->
+                <th>
+                    Something else
+                </th>
+            </tr>
+        </thead>
+        <!-- Body for selction options -->
+        <tbody>
+            <tr>
+                <td>
+                    <form method="post">
+                        <input type="radio" name="red"> Red <br>
+                        <input type="radio" name="blue"> Blue <br>
+                        <input type="radio" name="green"> Green <br>
+                        <input type="submit" name="submit">
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+        <!-- Single buttons -->
+        <tfoot>
+            <tr>
+                <td>
+                    Enter standby
+                </td>
+            </tr>
+        </tfoot>
+
+
+
+
+
+    </table>
+
+
+    <p id="special">
+        <!-- working on displaying more and more text -->
+        <script>
+            var interval = setInterval(sayHello, 1000);
+            var text = document.getElementById("special");
+            
+            // when press a key, will 'reset' the page
+            document.addEventListener('keydown', function() {
+                console.log('pressed')
+                text.innerHTML = '';
+            });
+
+            function sayHello() {
+                text.innerHTML += 'hello<br>';
+                console.log('hello');
+            }
+        </script>        
+    </p>
+
+    
+
+</body>
+</html>

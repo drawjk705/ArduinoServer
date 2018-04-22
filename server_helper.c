@@ -142,6 +142,11 @@ char* read_html_file(char* filename) {
  * @return      char flag for what to do based on request
  */
 char parse_post(char* post) {
+    
+    if (post == NULL) {
+        return '\0';
+    }
+
     char buf[10];
 
     for (int i = 0; i < strlen(post); i++) {

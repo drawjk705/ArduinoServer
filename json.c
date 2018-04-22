@@ -4,10 +4,9 @@ dict* create_dict() {
   dict* d = malloc(sizeof(dict));
   // char* temp = malloc(sizeof(char) * (strlen("Temp") + 1));
   // strcpy(temp, "Temp");
-  kvp* head = make_pair("Temp", "C");
+  kvp* head = make_pair("Status", "C");
   d->head = malloc(sizeof(node*));
   d->head->value = head;
-
   return d;
 }
 
@@ -20,7 +19,7 @@ int replace_head(dict* d, char* temp) {
   // char* t = malloc(sizeof(char) * (strlen("Temp") + 1));
   // strcpy(t, "Temp");
 
-  kvp* new_head = make_pair("Temp", temp);
+  kvp* new_head = make_pair("Status", temp);
 
   kvp* old_head = d->head->value;
 

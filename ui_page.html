@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <!-- <script src="http://code.jquery.com/jquery-1.9"></script> -->
+    <script src="http://code.jquery.com/jquery-1.9"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <link rel="stylesheet" type="text/css" href="ui_page.css">
     <title>Our page</title>
@@ -14,7 +14,7 @@
     <p id = 'stats3'> </p>
     <p id = 'stats4'> </p>
 
-    <!-- Table with interactive options -->
+    <!-- Table with interactive buttons -->
     <table>
         <!-- Headers -->
         <thead>
@@ -37,41 +37,30 @@
                 </th>
             </tr>
         </thead>
-        <!-- Body for selction options -->
+        <!-- Body for selction buttons -->
         <tbody>
             <tr>
                 <td>
                      <!-- color -->
-                    <form method="post"> 
-                        <input type="radio" name="red"> Red <br>
-                        <input type="radio" name="blue"> Blue <br>
-                        <input type="radio" name="green"> Green <br>
-                        <input type="submit" name="submit">
-                    </form>
+                        <button class="color" value="r">Red</button>
+                        <button class="color" value="g">Green</button>
+                        <button class="color" value="b">Blue</button>
                 </td>
                  <td>
                     <!-- temp format -->
-                    <form method="post">
-                        <input type="radio" id="c" name="c"> Celsius <br>
-                        <input type="radio" id="f" name="f"> Fahrenheit <br>
-                        <input type="submit" name="submit">
-                    </form>
+                    <button class="temp" value="c">Celsius</button>
+                    <button class="temp" value="f">Fahrenheit</button>
                 </td>
                   <td>
                     <!-- letter to dispplay -->
-                    <form method="post">
-                        <input type="radio" name="l"> LOL <br>
-                        <input type="radio" name="s"> SOS <br>
-                        <input type="submit" name="submit">
-                    </form>
+                        <button class="word" value="l">LOL</button>
+                        <button class="word" value="s">SOS</button>
+                        <button class="word" value="b">[][]</button>
                 </td>
                   <td>
                     <!-- sleep mode -->
-                    <form method="post">
-                        <input type="radio" id="q" name="stdby"> Standby Mode <br>
-                        <input type="radio" id="w" name="wake"> Awaken <br>
-                        <input type="submit" name="submit"> 
-                    </form>
+                        <button class="mode" value="q">Standby</button>
+                        <button class="mode" value="w">Awaken</button>
                 </td>
             </tr>
         </tbody>
@@ -87,9 +76,87 @@
 
             $(document).ready(function() {
 
-                $()
+                // get current location
+                var curr_url = window.location.href;
+                console.log(curr_url);
+                var last_color;
+                var last_mode;
+                var last_temp;
+
+                $('button').click(function() {
+                    var button = $(this);
+                    console.log(button.val() + " clicked.");
+                    $.ajax({
+                        type: "POST",
+                        url: curr_url + button.val();
+                        update_page();
+                        update_data();
+                    });
+                });
 
 
+
+
+
+                var standby = false;
+                var offline = false;
+                var is_Celsius = true;
+                var temps = [];
+                var min = Number.POSITIVE_INFINITY;
+                var max = Number.NEGATIVE_INFINITY;
+                var avg = 0;
+
+                function update_page() {
+                    if (!standby && !offline) {
+                        var s1 = "Current temperature is: ";
+                        if (is_Celsius) {
+                            s1 += temps[temps.length - 1] + " degrees C";
+                        } else {
+                            s1 += (temps[temps.length - 1] * 9 / 5) + 32 + " degrees F";
+                        }
+                        $("#stats1").text(s1);
+
+                        var s2;
+                        s2 = "Max temperature for past hour is: ";
+                        if (is_Celsius) {
+                            s2 += max + " degrees C";
+                        } else {
+                            s2 += (max * 9 / 5) + 32 + " degrees F";
+                        }
+                        $("#stats2").text(s2);
+                        
+                        var s3 = "Min temperature for past hour is: ";
+                        if (is_Celsius) {
+                            s3 += min + " degrees C";
+                        } else {
+                            s3 += (min * 9 / 5) + 32 + " degrees F";
+                        }
+                        $("#stats3").text(s3);
+
+                        var s4 = "Average temperature for past hour is: ";
+                        if (is_Celsius) {
+                            s4 += avg + " degrees C";
+                        } else {
+                            s4 += (avg * 9 / 5) + 32 + " degrees F";
+                        }
+                        $("#stats4").text(s4);
+
+                    } else if (standby) {
+                        $("#stats1").text("Arduino is in standby mode");
+                        $("#stats2").text("");
+                        $("#stats3").text("");
+                        $("#stats4").text("");
+                    } else if (offline) {
+                        $("#stats1").text("ERROR: Arduino is offline");
+                        $("#stats2").text("");
+                        $("#stats3").text("");
+                        $("#stats4").text("");
+                    }
+                }
+
+                update_page();
+
+                var page_update = setInterval(update_page, 2000);
 
 
                 //TODO TEST THIS 
@@ -99,16 +166,32 @@
 
                     // get json file data, and add it to a dictionary
                     $.getJSON("output.json", function(data) {
+                        var current = 0;
                         var total_temp = 0;
                         var size = 0;
-                        var min = Math.max();
-                        var max = Math.min();
 
                         $.each(data, function(key, val) {
                             if (!(key in readings)) {
                                 readings[key] = val;
                             }
                         })
+
+                        var status = readings["Status"];
+                        console.log("STATUS = " + status);
+                        if (status == "F") {
+                            is_Celsius = false;
+                            standby = false;
+                            offline = false;
+                        } else if (status == "C"){
+                            is_Celsius = true;
+                            standby = false;
+                            offline = false;
+                        } else if (status == "S") {
+                            standby = true;
+                            offline = false;
+                        } else if (status == "O") {
+                            offline = true;
+                        }
 
                         for (var time in readings) {
                             console.log("total temp: " + total_temp);
@@ -117,12 +200,17 @@
                                 if (!isNaN(parseFloat(readings[time]))) {
                                     var temp = parseFloat(readings[time]);
                                     total_temp += temp;
+                                    temps.push(temp);
+                                    console.log("TEMPS = " + temps.length);
+
                                     size += 1;
                                     if (temp < min) {
                                         min = temp;
+                                        console.log("MIN = " + min);
                                     }
                                     if (temp > max) {
                                         max = temp;
+                                        console.log("MAX = " + max);
                                     }
                                 }
                             }
@@ -137,7 +225,7 @@
                 }
 
                 update_data();
-                var interval = setInterval(update_data, 3000);
+                var interval = setInterval(update_data, 20000);
             });
 
             function withinHour(time) {
@@ -167,47 +255,24 @@
                 }
             }
 
-            //showing teperature by default 
-            $("#stats1").text("The current temperature is " + arr[0] + " Celsius");
-            $("#stats2").text("The maximum temperature in the past hour is " + max + " Celsius" );
-            $("#stats3").text("The minimum temperature in the past hour is " + min + " Celsius" );
-            $("#stats4").text("The average temperature in the past hour is " + avg + " Celsius" );
-
-
 
            $('input:radio[name="c"]').change(function(){
                 //display the max, min and average temperature in Celsius 
-                console.log("C passed"); //test 
-                $("#stats1").text("The current temperature is " + arr[0] + " Celsius");
-                $("#stats2").text("The maximum temperature in the past hour is " + max + " Celsius" );
-                $("#stats3").text("The minimum temperature in the past hour is " + min + " Celsius" );
-                $("#stats4").text("The average temperature in the past hour is " + avg + " Celsius" );
-            });;
+                console.log("C passed");
+            });
 
             $('input:radio[name="f"]').change(function(){
-                //display the max, min and average temperature in Ferinheight  
-                console.log("F passed"); //test 
-                $("#stats1").text("The current temperature is " + ((arr[0])*9/5+32) + " Ferinheight");
-                $("#stats2").text("The maximum temperature in the past hour is " + (max*9/5+32) + " Ferinheight");
-                $("#stats3").text("The minimum temperature in the past hour is " + (min*9/5+32) + " Ferinheight");
-                $("#stats4").text("The average temperature in the past hour is " + (avg*9/5+32) + " Ferinheight");
+                //display the max, min and average temperature in F
+                console.log("f passed"); //test 
             });
 
             $('input:radio[name="stdby"]').change(function(){
-                //display the max, min and average temperature in Ferinheight  
                 console.log("sleep mode "); //test 
-                $("#stats1").text(''); 
-                $("#stats2").text(''); 
-                $("#stats3").text(''); 
-                $("#stats4").text(''); 
+                standby = true;
             });
               $('input:radio[name="wake"]').change(function(){
-                //display the max, min and average temperature in Celsius 
-                console.log("C passed"); //test 
-                $("#stats1").text("The current temperature is " + arr[0] + " Celsius");
-                $("#stats2").text("The maximum temperature in the past hour is " + max + " Celsius" );
-                $("#stats3").text("The minimum temperature in the past hour is " + min + " Celsius" );
-                $("#stats4").text("The average temperature in the past hour is " + avg + " Celsius" );
+                console.log("w passed"); //test
+                standby = false;
             });
         </script>        
     </p>
