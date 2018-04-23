@@ -13,7 +13,7 @@
 #include <pthread.h>
 #include <time.h>
 #include "times.h"
-#include "json.h"
+#include "jsonv2.h"
 
 void configure(int fd);
 

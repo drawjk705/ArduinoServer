@@ -42,9 +42,11 @@
             <tr>
                 <td>
                      <!-- color -->
+                     <form method="post">
                         <button class="color" value="r">Red</button>
                         <button class="color" value="g">Green</button>
                         <button class="color" value="b">Blue</button>
+                    </form>
                 </td>
                  <td>
                     <!-- temp format -->
@@ -75,28 +77,6 @@
 
 
             $(document).ready(function() {
-
-                // get current location
-                var curr_url = window.location.href;
-                console.log(curr_url);
-                var last_color;
-                var last_mode;
-                var last_temp;
-
-                $('button').click(function() {
-                    var button = $(this);
-                    console.log(button.val() + " clicked.");
-                    $.ajax({
-                        type: "POST",
-                        url: curr_url + button.val();
-                        update_page();
-                        update_data();
-                    });
-                });
-
-
-
-
 
                 var standby = false;
                 var offline = false;
@@ -156,7 +136,7 @@
 
                 update_page();
 
-                var page_update = setInterval(update_page, 2000);
+                var page_update = setInterval(update_page, 5000);
 
 
                 //TODO TEST THIS 
@@ -225,7 +205,7 @@
                 }
 
                 update_data();
-                var interval = setInterval(update_data, 20000);
+                var interval = setInterval(update_data, 10000);
             });
 
             function withinHour(time) {

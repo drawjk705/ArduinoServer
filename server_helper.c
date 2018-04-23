@@ -147,31 +147,27 @@ char parse_post(char* post) {
         return '\0';
     }
 
-    char buf[10];
+    char buf = 'w';
 
-    for (int i = 0; i < strlen(post); i++) {
-        
-        buf[i] = post[i];
-        if (post[i + 1] == '=') {
-            buf[i + 1] = '\0';
+    for (int i = 0; i < strlen(post); i++) {     
+        if (post[i] == '=') {
+            buf = post[i + 1];
             break;
         }
     }
     
-    if (strcmp(buf, "red") == 0)   return 'r';
-    if (strcmp(buf, "green") == 0) return 'g';
-    if (strcmp(buf, "blue") == 0)  return 'b';
-    if (strcmp(buf, "c") == 0)     return 'c';
-    if (strcmp(buf, "f") == 0)     return 'f';
-    if (strcmp(buf, "l") == 0)     return 'l';
-    if (strcmp(buf, "s") == 0)     return 's';
-    if (strcmp(buf, "stdby") == 0) return 'q';
-    if (strcmp(buf, "wake") == 0)  return 'w';
+    // if (buf == 'r')   return 'r';
+    // if (strcmp(buf, "green") == 0) return 'g';
+    // if (strcmp(buf, "blue") == 0)  return 'b';
+    // if (strcmp(buf, "c") == 0)     return 'c';
+    // if (strcmp(buf, "f") == 0)     return 'f';
+    // if (strcmp(buf, "l") == 0)     return 'l';
+    // if (strcmp(buf, "s") == 0)     return 's';
+    // if (strcmp(buf, "stdby") == 0) return 'q';
+    // if (strcmp(buf, "wake") == 0)  return 'w';
     // need logic for [][] and for wake
 
-
-
-    return '\0';
+    return buf;
 }
 
 /**

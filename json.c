@@ -40,32 +40,21 @@ int add_to_dict(kvp* p, dict* d) {
   if (p == NULL || d == NULL) {
     return 0;
   }
-  if (d->head == NULL) {
-    node* new   = malloc(sizeof(node));
-    if (new == NULL) {
-      return 0;
-    }
-    new->value  = p;
-    new->next   = NULL;
-    d->head     = new;
-  }
-  else {
-    node* new   = malloc(sizeof(node));
-    if (new == NULL) {
-      return 0;
-    }  
+  node* new   = malloc(sizeof(node));
+  if (new == NULL) {
+    return 0;
+  }  
 
-    new->value  = p;
-    new->next   = NULL;
+  new->value  = p;
+  new->next   = NULL;
 
-    node* n = d->head;
-    while (n->next != NULL) {
-      n = n->next;
-    }
-
-    n->next = new;
+  node* n = d->head;
+  while (n != NULL && n->next != NULL) {
+    n = n->next;
   }
 
+  n->next = new;
+  
   d->size++;
  
   return 1;
