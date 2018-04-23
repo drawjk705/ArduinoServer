@@ -59,13 +59,10 @@ void* handle_arduino(void* p) {
   pthread_mutex_lock(lock);
   int is_quit = pack->quit_flag;
   pthread_mutex_unlock(lock);
-  char* kvp = NULL;
-
+  
+  char* kvp = create_first_pair("Status", "C");
+  
   while (!is_quit) {
-    
-    if (kvp == NULL) {
-      kvp = create_first_pair("Status", "C");
-    }
 
     if (is_open) {
 
@@ -154,9 +151,11 @@ void* handle_arduino(void* p) {
         ard_fd = get_started("/dev/ttyACM1");
         pthread_mutex_unlock(lock);
         if (is_open) {
+          pack->is_Celsius = 1;
           filename = "dev/ttyACM1";
         }
       } else {
+        pack->is_Celsius = 1;
         filename = "dev/ttyACM0";
       }
     }
@@ -169,9 +168,9 @@ void* handle_arduino(void* p) {
     }
     if (!pack->requesting) {
         write_to_file(kvp, "output.json");
-        destroy_kvps(&kvp);
     }
   }
+  destroy_kvps(&kvp);
   close(ard_fd);
 
 

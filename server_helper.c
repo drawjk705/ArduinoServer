@@ -75,6 +75,10 @@ char* get_post(char* request) {
  */
 char* get_path(char* request) {
 
+    if (request == NULL) {
+        return NULL;
+    }
+
     // find appropriate indeces to "slice"
     int start = 0, end = 0;
     for (int i = 0; i < strlen(request); i++) {
@@ -89,6 +93,9 @@ char* get_path(char* request) {
 
     // copy over request
     char* out = malloc(sizeof(char) * (end - start + 1));
+    if (out == NULL) {
+        return NULL;
+    }
 
     for (int i = 0; i < end - start; i++) {
         out[i] = request[i + start];
@@ -106,6 +113,10 @@ char* get_path(char* request) {
  */
 char* read_html_file(char* filename) {
     
+    if (filename == NULL) {
+        return NULL;
+    }
+
     // create file pointer
     FILE* fp = fopen(filename, "r");
     if (fp == NULL) {

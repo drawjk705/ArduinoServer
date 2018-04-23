@@ -250,6 +250,10 @@ void* handle_connection(void* p) {
 
     // parse request
     char* req = get_path(request);
+    if (req == NULL) {
+      close(fd);
+      pthread_exit(NULL);
+    }
 
     // ignore favicon.ico requests
     if (strcmp(req, "favicon.ico") == 0) {
@@ -286,15 +290,14 @@ void* handle_connection(void* p) {
 
     // read the HTML file, and append it to the reply
     char* add = read_html_file(req);
+    free(req);
     
     // handle invalid requests
     if (add == NULL) {
-      free(req);
       free(reply);
       close(fd);
       pthread_exit(NULL);
     }
-    free(req);
 
     // realloc() reply
     reply = (char*) realloc(reply, sizeof(char) * ((strlen(reply) + strlen(add) + 1)));
@@ -311,12 +314,14 @@ void* handle_connection(void* p) {
       char* post = get_post(request);
       char c = parse_post(post);
       char* kvp = create_first_pair("status", "0");
-      if (c == '\0') {        
-        change_status(&kvp, '1');
+      if (kvp != NULL) {
+        if (c == '\0') {        
+          change_status(&kvp, '1');
+        }
+        printf("writting error file\n");
+        write_to_file(kvp, "error.json");
+        destroy_kvps(&kvp);
       }
-      printf("writting error file\n");
-      write_to_file(kvp, "error.json");
-      destroy_kvps(&kvp);
       while (pack->ctrl_signal != '\0' && pack->ctrl_signal != 'q'){
         printf("control is still %c\n", pack->ctrl_signal);
         sleep(3);

@@ -16,22 +16,8 @@ $(document).ready(function () {
     $('button').click(function() {
         var value = $(this).val();
         console.log(value);
-        if ((isStandby && value == 'w') || !isStandby) {
-            while (true) {
-                $.post(url, {value}, function(data, status) {
-                    console.log('sending ' + value + ' to arduino was a ' + status);
-                });
-                $.getJSON("error.json", function(json) {
-                    $.each(json, function(key, value){
-                        var stat = json['status']; 
-                        console.log("STATUS == " + stat);   
-                        if (stat == 0) {
-                            console.log('WE CAN BREAK')
-                            break;
-                        }
-                    });
-                });
-            }
+        if (((isStandby && value == 'w') || !isStandby) && !isOffline) {
+            sendPost(value);
             if (value == 'f') {
                 isCelsius = false;
                 isStandby = false;
@@ -47,6 +33,24 @@ $(document).ready(function () {
         }
     });
 
+    function sendPost(value) {
+        $.post(url, {value}, function(data, status) {
+            console.log('sending ' + value + ' to arduino was a ' + status);
+        });
+        $.getJSON("error.json", function(json) {    
+            $.each(json, function(key, val){
+                var stat = json['status']; 
+                console.log("STATUS == " + stat);   
+                if (stat == 0) {
+                    console.log('WE CAN BREAK')
+                    return;
+                } else {
+                    sendPost(value);
+                }
+            });
+        });
+    }
+
     // get the json
     function getData() {
         // console.log('getting data')
@@ -57,16 +61,20 @@ $(document).ready(function () {
                     isCelsius = false;
                     isStandby = false;
                     isOffline = false;
+                    updatePage();
                 } else if (stat == 'C'){
                     isCelsius = true;
                     isStandby = false;
                     isOffline = false;
+                    updatePage();
                 } else if (stat == 'Q') {
                     isStandby = true;
                     isOffline = false;
+                    updatePage();
                 } else if (stat == 'O') {
                     isOffline = true;
                     isStandby = false;
+                    updatePage();
                 }
                 console.log('Status: ' + stat);
                 if (!isNaN(parseFloat(temp))) {
@@ -75,7 +83,6 @@ $(document).ready(function () {
                 // console.log(readings);
             })
         });
-        updatePage();
     }
 
     getData();
