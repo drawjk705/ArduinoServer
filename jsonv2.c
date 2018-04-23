@@ -38,6 +38,7 @@ void add_kvp(char** kvp, char* key, char* value) {
 void destroy_kvps(char** kvp) {
     if (*kvp != NULL) {
         free(*kvp);
+        *kvp = NULL;
     }
 }
 

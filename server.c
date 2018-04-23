@@ -277,6 +277,10 @@ void* handle_connection(void* p) {
 
     // this is the message that we'll send back
     char* reply = malloc(sizeof(char) * 100);
+    if (reply == NULL) {
+      close(fd);
+      pthread_exit(NULL);
+    }
     sprintf(reply, "HTTP/1.1 200 OK\nContent-Type: %s\n\n", type_msg);
 
 
@@ -306,6 +310,18 @@ void* handle_connection(void* p) {
     if (is_get(request) == 1) {
       char* post = get_post(request);
       char c = parse_post(post);
+      char* kvp = create_first_pair("status", "0");
+      if (c == '\0') {        
+        change_status(&kvp, '1');
+      }
+      printf("writting error file\n");
+      write_to_file(kvp, "error.json");
+      destroy_kvps(&kvp);
+      while (pack->ctrl_signal != '\0' && pack->ctrl_signal != 'q'){
+        printf("control is still %c\n", pack->ctrl_signal);
+        sleep(3);
+        // block
+      }
       pthread_mutex_lock(lock);
       pack->ctrl_signal = c;
       if (c == 'f') {

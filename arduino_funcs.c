@@ -59,21 +59,30 @@ void* handle_arduino(void* p) {
   pthread_mutex_lock(lock);
   int is_quit = pack->quit_flag;
   pthread_mutex_unlock(lock);
+  char* kvp = NULL;
 
   while (!is_quit) {
+    
+    if (kvp == NULL) {
+      kvp = create_first_pair("Status", "C");
+    }
 
     if (is_open) {
 
-      char* kvp = NULL;
+      // char* kvp = NULL;
 
       if (!is_stdby) {
         pthread_mutex_lock(lock);
         if (pack->is_Celsius) {
-          kvp = create_first_pair("Status", "C");
-        } else {
-          kvp = create_first_pair("Status", "F");
+          change_status(&kvp, 'C');
+        }
+        else {
+          change_status(&kvp, 'F');
         }
         pthread_mutex_unlock(lock);
+      }
+      else {
+        change_status(&kvp, 'Q');
       }
 
       if (pack->ctrl_signal != '\0') {
@@ -85,22 +94,33 @@ void* handle_arduino(void* p) {
         sig[1] = '\n';
         sig[2] = '\0';
 
+        if (sig[0] == 'w') {
+          is_stdby = 0;
+        } else if (sig[0] == 'q') {
+          is_stdby = 1;
+        }
+
         printf("writing %s to arduino\n", sig);
         
         pthread_mutex_lock(lock);
-        write(ard_fd, sig, strlen(sig));
+        int bytes_written = 0;
+        while (bytes_written != strlen(sig)) {
+            bytes_written += write(ard_fd, sig, strlen(sig));
+        }
         pthread_mutex_unlock(lock);
         sleep(3);
         
+        // "w\n" afterwards to clear things out
         if (sig[0] != 'q') {
           strcpy(sig, "w\n");
           pthread_mutex_lock(lock);
-          write(ard_fd, sig, strlen(sig));
-          pack->ctrl_signal = '\0';
+          bytes_written = 0;
+          while (bytes_written != strlen(sig)) {
+            bytes_written += write(ard_fd, sig, strlen(sig));
+          }
           pthread_mutex_unlock(lock);
-        } else {
-          change_status(&kvp, 'S');
         }
+        pack->ctrl_signal = '\0';
       }
 
       char* time = get_current_time();
@@ -109,21 +129,17 @@ void* handle_arduino(void* p) {
       char* temperature = read_data(filename, ard_fd, NULL);
       pthread_mutex_unlock(lock);
 
-      char* value = malloc(sizeof(char) * 20);
       if (temperature == NULL) {
-        strcpy(value, "OFFLINE");
         change_status(&kvp, 'O');
       } else {
+        char* value = malloc(sizeof(char) * 20);
         strcpy(value, temperature);
         free(temperature);
         add_kvp(&kvp, time, value);
       }
-      if (!pack->requesting) {
-        write_to_file(kvp, "output.json");
-      }
-      destroy_kvps(&kvp);
     }
     else if (!is_open) {
+      change_status(&kvp, 'O');
       close(ard_fd);
 
       printf("Arduino is offline\n");
@@ -150,6 +166,10 @@ void* handle_arduino(void* p) {
     pthread_mutex_unlock(lock);
     if (is_quit) {
       break;
+    }
+    if (!pack->requesting) {
+        write_to_file(kvp, "output.json");
+        destroy_kvps(&kvp);
     }
   }
   close(ard_fd);

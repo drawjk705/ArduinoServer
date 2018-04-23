@@ -144,6 +144,9 @@ char* read_html_file(char* filename) {
 char parse_post(char* post) {
     
     if (post == NULL) {
+        
+        printf("\n\n NULL POST\n\n");
+
         return '\0';
     }
 
@@ -166,6 +169,8 @@ char parse_post(char* post) {
     // if (strcmp(buf, "stdby") == 0) return 'q';
     // if (strcmp(buf, "wake") == 0)  return 'w';
     // need logic for [][] and for wake
+    
+    printf("\n\nPOST READ: %c\n\n", buf);
 
     return buf;
 }
